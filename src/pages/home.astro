@@ -1,0 +1,45 @@
+---
+import "../styles/global.css";
+import MainLayout from "../layouts/MainLayout.astro";
+---
+
+<MainLayout content={{ title: "Inicio - Spotify Stats" }}>
+    <main>
+        
+    </main>
+</MainLayout>
+
+<!-- <html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Inicio - Spotify Stats</title>
+  </head>
+  <body>
+    {
+      user ? (
+        <div>
+          <h1>🎧 Hola, {user.display_name}!</h1>
+          {user.images?.length > 0 && (
+            <img
+              src={user.images[0].url}
+              alt="Avatar"
+              width="100"
+              style="border-radius: 50%;"
+            />
+          )}
+          <p>Tu correo: {user.email}</p>
+          <p>Tu país: {user.country}</p>
+
+          <button class="btn">ola</button>
+        </div>
+      ) : (
+        <div>
+          <h1>🔐 No has iniciado sesión con Spotify</h1>
+          <a href="/login">
+            <button>Iniciar sesión con Spotify</button>
+          </a>
+        </div>
+      )
+    }
+  </body>
+</html> -->

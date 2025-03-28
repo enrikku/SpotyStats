@@ -1,0 +1,114 @@
+---
+import "../styles/global.css";
+const { content } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{content.title}</title>
+  </head>
+  <body>
+    <div class="navbar bg-base-100 shadow-sm">
+      <div class="flex-1">
+        <a class="btn btn-ghost text-xl">SpotyStats</a>
+      </div>
+      <div class="flex gap-2">
+        <input
+          type="text"
+          placeholder="Search"
+          class="input input-bordered w-24 md:w-auto"
+        />
+        <div class="dropdown dropdown-end">
+          <div
+            tabindex="0"
+            role="button"
+            class="btn btn-ghost btn-circle avatar"
+          >
+            <div class="w-10 rounded-full">
+              <img id="avatar" alt="Tailwind CSS Navbar component" src="" />
+            </div>
+          </div>
+          <ul
+            tabindex="0"
+            class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
+          >
+            <li><a>Profile</a></li>
+            <li id="logout"><a>Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <slot />
+  </body>
+  <script type="module">
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2)
+        return decodeURIComponent(parts.pop().split(";").shift());
+    }
+
+    function setCookie(name, value, seconds) {
+      const expires = new Date(Date.now() + seconds * 1000).toUTCString();
+      document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+    }
+
+    //#region "Load Profile"
+    const token = getCookie("access_token");
+
+    if (!token) {
+      window.location.href = "/";
+    }
+
+    var name = "";
+    var urlImage = "";
+    var externalUrl = "";
+
+    const cookieDisplayName = getCookie("display_name");
+    const cookieAvatar = getCookie("avatar");
+    const cookieExternalUrls = getCookie("external_urls");
+
+    if (cookieDisplayName && cookieAvatar && cookieExternalUrls) {
+      name = cookieDisplayName;
+      urlImage = cookieAvatar;
+      externalUrl = cookieExternalUrls;
+
+      console.log("🎉 Datos de la cookie:", urlImage);
+    } else {
+      const res = await fetch("https://api.spotify.com/v1/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.ok) {
+        const user = await res.json();
+        urlImage = user.images?.[0]?.url || "";
+
+        setCookie("display_name", user.display_name, 3600);
+        setCookie("external_urls", user.external_urls, 3600);
+        setCookie("avatar", user.images?.[0]?.url, 3600);
+      } else {
+        console.error("❌ Error al obtener perfil:", res.status);
+      }
+    }
+
+    const avatar = document.getElementById("avatar");
+    avatar.src = urlImage;
+    //#endregion
+
+    const logout = document.getElementById("logout");
+    logout.addEventListener("click", () => {
+      const cookies = document.cookie.split(";");
+
+      for (const cookie of cookies) {
+        const name = cookie.split("=")[0].trim();
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+      }
+      window.location.href = "/";
+    });
+  </script>
+</html>
