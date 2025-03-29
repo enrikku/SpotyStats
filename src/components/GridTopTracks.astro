@@ -1,0 +1,93 @@
+---
+import Image from "astro/components/Image.astro";
+---
+
+<script>
+  import { getTopTracks } from "../lib/spotify";
+  import { getAccesTokenCookie } from "../lib/utils";
+
+  const tabs = document.querySelectorAll(
+    ".tab"
+  ) as NodeListOf<HTMLAnchorElement>;
+  const tbody = document.getElementById("trackBody") as HTMLTableSectionElement;
+
+  const token = await getAccesTokenCookie();
+
+  type TimeRange = "short_term" | "medium_term" | "long_term";
+  type SpotifyTrack = {
+    name: string;
+    album: {
+      name: string;
+      images: { url: string }[];
+    };
+    external_urls: {
+      spotify: string;
+    };
+  };
+
+  const cachedTracks: Record<TimeRange, any> = {
+    short_term: null,
+    medium_term: null,
+    long_term: null,
+  };
+
+  async function loadTracks(range: TimeRange = "short_term") {
+    // Si ya están cacheadas, no vuelvas a pedirlas
+    if (!cachedTracks[range]) {
+      cachedTracks[range] = await getTopTracks(token, range);
+    }
+
+    const tracks = cachedTracks[range];
+
+    tbody.innerHTML = "";
+
+    (tracks as SpotifyTrack[]).forEach((track: SpotifyTrack, i: number) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+    <td class="flex items-center gap-2">
+        <span>${i + 1}</span>
+        <img src="${track.album.images[0]?.url}" alt="Album" width="40" loading="lazy" class="rounded" />
+    </td>
+    <td>${track.name}</td>
+    <td>${track.album.name}</td>
+    <td>
+        <a href="${track.external_urls.spotify}" target="_blank" rel="noopener noreferrer">🔗</a>
+    </td>
+  `;
+      tbody.appendChild(row);
+    });
+  }
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", function () {
+      tabs.forEach((t) => t.classList.remove("tab-active"));
+      this.classList.add("tab-active");
+
+      const range = this.dataset.range as TimeRange;
+    loadTracks(range);
+    });
+  });
+
+  // Carga inicial
+  loadTracks("short_term");
+</script>
+<div role="tablist" class="tabs tabs-lift justify-center" id="tabs">
+  <p class="tab tab-active" data-range="short_term">Last 4 Weeks</p>
+  <p class="tab" data-range="medium_term">Last 6 Months</p>
+  <p class="tab" data-range="long_term">Last 12 Months</p>
+</div>
+<div
+  class="overflow-x-auto rounded-box border-2 border-base-content/5 bg-base-100 p-10 m-5"
+>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Song</th>
+        <th>Album</th>
+        <th>Link</th>
+      </tr>
+    </thead>
+    <tbody id="trackBody"> </tbody>
+  </table>
+</div>

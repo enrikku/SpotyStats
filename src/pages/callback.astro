@@ -3,31 +3,57 @@
   <body>
     <h1>Procesando autenticación con Spotify...</h1>
 
-    <script type="module">
+    <script>
+      import { encrypt, decrypt } from "../lib/crypto.js";
+
       const code = new URLSearchParams(window.location.search).get("code");
 
-      if (code) {
-        const url = `/api/callback?code=${encodeURIComponent(code)}`;
-        await fetch(url)
-          .then((res) => res.json())
-          .then((data) => {
-            console.log("Token recibido:", data);
+      async function run() {
+        if (!code) {
+          alert("No se pudo obtener el code de la autenticación con Spotify.");
+          window.location.href = "/";
+          return;
+        }
 
-            const token = data.access_token;
-            const expiresIn = data.expires_in || 3600; // segundos (1h por defecto)
-            const expireDate = new Date(Date.now() + expiresIn * 1000).toUTCString();
-            document.cookie = `access_token=${token}; expires=${expireDate}; path=/`;
-            
-            window.location.href = "/";
-          })
-          .catch((err) => {
-            alert("Error al obtener token de Spotify.");
-            window.location.href = "/";
-          });
-      } else {
-        alert("No se pudo obtener el code de la autenticación con Spotify.");
-        window.location.href = "/";
+        const url = `/api/callback?code=${encodeURIComponent(code)}`;
+        const passwd = import.meta.env.PUBLIC_CRYPT_PSSWD;
+
+        try {
+          const res = await fetch(url);
+          const data = await res.json();
+
+          const token = data.access_token;
+          const expiresIn = data.expires_in || 3600;
+          const expireDate = new Date(
+            Date.now() + expiresIn * 1000
+          ).toUTCString();
+
+          // console.log("Obteniendo token de Spotify...");
+          // console.log("Token:", data);
+
+          //console.log("Encriptando token:");
+          const encrypted = await encrypt(token, passwd);
+          const encryptedStr = encodeURIComponent(JSON.stringify(encrypted));
+
+          //console.log("🔐 Token encriptado:", encryptedToken.ciphertext);
+
+          //console.log("Desencriptando token...");
+          //const decryptedToken = await decrypt(encryptedToken, passwd);
+          //console.log("🔓 Token desencriptado:", decryptedToken);
+
+          // Guardar en cookie
+          document.cookie =  `access_token=${encryptedStr}; expires=${expireDate}; path=/`;
+
+          // Redirigir
+          window.location.href = "/";
+        } catch (err) {
+          console.error("❌ Error al obtener token de Spotify", err);
+          alert("Error al obtener token de Spotify.");
+          window.location.href = "/";
+        }
       }
+
+      run();
     </script>
   </body>
 </html>
