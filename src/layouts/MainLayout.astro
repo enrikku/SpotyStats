@@ -1,5 +1,7 @@
 ---
 import "../styles/global.css";
+import  SpeedInsights  from "@vercel/speed-insights/astro"
+
 const { content } = Astro.props;
 ---
 
@@ -52,6 +54,7 @@ const { content } = Astro.props;
       </div>
     </div>
     <slot />
+    <SpeedInsights />
   </body>
   <script>
     import { decrypt } from "../lib/crypto.js";
