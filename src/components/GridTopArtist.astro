@@ -1,0 +1,124 @@
+---
+import Image from "astro/components/Image.astro";
+---
+
+<script>
+  import { getTopArtists } from "../lib/spotify";
+  import { getAccesTokenCookie } from "../lib/utils";
+
+  const tabs = document.querySelectorAll(
+    ".tab"
+  ) as NodeListOf<HTMLAnchorElement>;
+  const artistsContainer = document.getElementById("artistsContainer") as HTMLDivElement;
+
+  const token = await getAccesTokenCookie();
+
+  type TimeRange = "short_term" | "medium_term" | "long_term";
+  type SpotifyArtist = {
+    name: string;
+    images: { url: string }[];
+    external_urls: {
+      spotify: string;
+    };
+    genres: string[];
+    followers: {
+      total: number;
+    };
+    popularity: number;
+  };
+
+  const cachedArtists: Record<TimeRange, any> = {
+    short_term: null,
+    medium_term: null,
+    long_term: null,
+  };
+
+  async function getArtistInfo(id: string) {
+    const res = await fetch(`https://api.spotify.com/v1/artists/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return await res.json();
+  }
+
+  async function loadArtists(range: TimeRange = "short_term") {
+    // Mostrar loading state
+    artistsContainer.innerHTML = Array(50).fill(`
+      <div class="flex flex-col items-center gap-2 p-2 sm:p-4 animate-pulse">
+        <div class="relative aspect-square w-full">
+          <div class="w-full h-full rounded-lg bg-base-300"></div>
+        </div>
+      </div>
+    `).join('');
+
+    if (!cachedArtists[range]) {
+      cachedArtists[range] = await getTopArtists(token, range);
+    }
+
+    const artists = cachedArtists[range];
+
+    // Crear fragment y array para las cards
+    const fragment = document.createDocumentFragment();
+    const cards: HTMLElement[] = [];
+
+    (artists as SpotifyArtist[]).forEach((artist: SpotifyArtist, i: number) => {
+      const artistCard = document.createElement("div");
+      artistCard.className = "flex flex-col items-center gap-2 p-2 sm:p-4 hover:scale-105 transition-transform opacity-0";
+      artistCard.style.transition = "opacity 0.3s ease-in-out";
+      artistCard.innerHTML = `
+        <a href="${artist.external_urls.spotify}" target="_blank" rel="noopener noreferrer" class="w-full">
+          <div class="relative aspect-square group">
+            <img src="${artist.images[0]?.url}" alt="${artist.name}" class="w-full h-full rounded-lg shadow-lg object-cover" loading="lazy"/>
+            <div class="absolute inset-0 bg-black/80 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg p-4 flex flex-col justify-center">
+              <h3 class="text-center font-bold text-sm sm:text-base mb-2">#${i + 1} ${artist.name}</h3>
+              <p class="text-center text-xs sm:text-sm text-gray-300 mb-2">Géneros: ${artist.genres.join(", ") || "No genres"}</p>
+              <p class="text-center text-xs sm:text-sm text-gray-300">Seguidores: ${artist.followers?.total.toLocaleString()}</p>
+              <p class="text-center text-xs sm:text-sm text-gray-300">Popularidad: ${artist.popularity}%</p>
+            </div>
+            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 rounded-b-lg group-hover:opacity-0 transition-opacity">
+              <h3 class="text-center font-bold text-sm sm:text-base">#${i + 1} ${artist.name}</h3>
+              <p class="text-center text-xs sm:text-sm text-gray-300">${artist.genres.slice(0, 2).join(", ") || "No genres"}</p>
+            </div>
+          </div>
+        </a>
+      `;
+      cards.push(artistCard);
+      fragment.appendChild(artistCard);
+    });
+
+    artistsContainer.innerHTML = '';
+    artistsContainer.appendChild(fragment);
+
+    // Revelar las cards gradualmente
+    cards.forEach((card, index) => {
+      setTimeout(() => {
+        card.style.opacity = "1";
+      }, index * 50);
+    });
+  }
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", function () {
+      tabs.forEach((t) => t.classList.remove("tab-active"));
+      this.classList.add("tab-active");
+
+      const range = this.dataset.range as TimeRange;
+      loadArtists(range);
+    });
+  });
+
+  // Carga inicial
+  loadArtists("short_term");
+</script>
+
+<div role="tablist" class="tabs tabs-lift justify-center text-sm sm:text-base" id="tabs">
+  <p class="tab tab-active" data-range="short_term">Last 4 Weeks</p>
+  <p class="tab" data-range="medium_term">Last 6 Months</p>
+  <p class="tab" data-range="long_term">Last 12 Months</p>
+</div>
+
+<div class="p-2 sm:p-5">
+  <div id="artistsContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-6">
+  </div>
+</div>

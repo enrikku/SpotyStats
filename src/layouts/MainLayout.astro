@@ -15,37 +15,42 @@ const { content } = Astro.props;
   <body>
     <div class="navbar bg-base-100 shadow-sm mb-10">
       <div class="flex-1">
-        <a class="btn btn-ghost text-xl" href="/">SpotyStats</a>
+        <a class="btn btn-ghost text-lg sm:text-xl" href="/">SpotyStats</a>
       </div>
 
-      <ul
-        class="menu menu-sm dropdown-content flex flex-row bg-base-100 rounded-box z-1 mt-3 w-fit p-2 shadow"
-      >
+      <div class="dropdown dropdown-end">
+        <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
+          </svg>
+        </div>
+        <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+          <li><a href="/toptracks">Top Tracks</a></li>
+          <li><a href="/topartists">Top Artists</a></li>
+          <li><a href="/topgenres">Top Genres</a></li>
+        </ul>
+      </div>
+
+      <ul class="menu menu-horizontal hidden lg:flex px-1">
         <li><a href="/toptracks">Top Tracks</a></li>
         <li><a href="/topartists">Top Artists</a></li>
         <li><a href="/topgenres">Top Genres</a></li>
       </ul>
 
-      <div class="flex gap-2">
-        <input
-          type="text"
-          placeholder="Search"
-          class="input input-bordered w-24 md:w-auto"
-        />
-
+      <div class="flex gap-2 items-center">
         <div class="dropdown dropdown-end">
           <div
             tabindex="0"
             role="button"
             class="btn btn-ghost btn-circle avatar"
           >
-            <div class="w-10 rounded-full">
-              <img id="avatar" alt="Tailwind CSS Navbar component" src="" />
+            <div class="w-8 sm:w-10 rounded-full">
+              <img id="avatar" alt="User avatar" src="" />
             </div>
           </div>
           <ul
             tabindex="0"
-            class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
+            class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
           >
             <li><a>Profile</a></li>
             <li id="logout"><a>Logout</a></li>
