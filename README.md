@@ -1,13 +1,60 @@
-# Astro with Tailwind
+# SpotyStats 🎵
 
-```sh
-npm create astro@latest -- --template with-tailwindcss
+SpotyStats es una aplicación web moderna construida con Astro que te permite visualizar y analizar tus estadísticas de Spotify de una manera interactiva y atractiva.
+
+## 🚀 Características
+
+- Visualización de datos de Spotify usando Chart.js
+- Interfaz moderna y responsiva con Tailwind CSS y DaisyUI
+- Animaciones interactivas con canvas-confetti
+- Integración con Vercel para despliegue y análisis
+
+## 🛠️ Tecnologías
+
+- [Astro](https://astro.build) - Framework web moderno
+- [Tailwind CSS](https://tailwindcss.com) - Framework CSS utilitario
+- [DaisyUI](https://daisyui.com) - Componentes para Tailwind CSS
+- [Chart.js](https://www.chartjs.org) - Biblioteca de gráficos
+- [Vercel](https://vercel.com) - Plataforma de despliegue
+
+## 🏗️ Instalación
+
+1. Clona el repositorio:
+```bash
+git clone https://github.com/tu-usuario/spotystats.git
+cd spotystats
 ```
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/with-tailwindcss)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/with-tailwindcss)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/with-tailwindcss/devcontainer.json)
+2. Instala las dependencias:
+```bash
+npm install
+```
 
-Astro comes with [Tailwind](https://tailwindcss.com) support out of the box. This example showcases how to style your Astro project with Tailwind.
+3. Inicia el servidor de desarrollo:
+```bash
+npm run dev
+```
 
-For complete setup instructions, please see our [Tailwind Integration Guide](https://docs.astro.build/en/guides/integrations-guide/tailwind).
+## 📝 Scripts Disponibles
+
+- `npm run dev` - Inicia el servidor de desarrollo
+- `npm run build` - Construye la aplicación para producción
+- `npm run preview` - Vista previa de la versión de producción
+
+## 🌐 Despliegue
+
+La aplicación está configurada para desplegarse automáticamente en Vercel. Cada push a la rama principal desencadenará un nuevo despliegue.
+
+## 📊 Análisis
+
+La aplicación incluye:
+- Vercel Analytics para seguimiento de usuarios
+- Vercel Speed Insights para monitoreo de rendimiento
+
+## 🤝 Contribuir
+
+Las contribuciones son bienvenidas. Por favor, abre un issue primero para discutir los cambios que te gustaría hacer.
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
