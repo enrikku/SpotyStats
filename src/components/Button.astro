@@ -27,7 +27,7 @@
     button.addEventListener("click", () => {
       const clientId = import.meta.env.PUBLIC_SPOTIFY_CLIENT_ID; // Usa variables PUBLIC_
       const redirectUri = import.meta.env.PUBLIC_REDIRECTED_URI;
-      const scope = import.meta.env.PUBLIC_SCOPE;
+      const scope = "user-read-private user-read-email user-follow-read user-read-playback-position user-top-read user-read-recently-played user-library-modify user-library-read ugc-image-upload user-read-playback-state user-modify-playback-state user-read-currently-playing app-remote-control streaming playlist-modify-private playlist-modify-public";
 	  
 
       const params = new URLSearchParams({
