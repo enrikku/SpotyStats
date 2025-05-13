@@ -1,7 +1,47 @@
 <html>
   <meta charset="UTF-8" />
+  <head>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        background: #1DB954;
+        color: white;
+      }
+
+      .container {
+        text-align: center;
+        padding: 2rem;
+      }
+
+      .loader {
+        width: 48px;
+        height: 48px;
+        border: 5px solid #FFF;
+        border-bottom-color: transparent;
+        border-radius: 50%;
+        display: inline-block;
+        box-sizing: border-box;
+        animation: rotation 1s linear infinite;
+        margin: 2rem 0;
+      }
+
+      @keyframes rotation {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
   <body>
-    <h1>Procesando autenticación con Spotify...</h1>
+    <div class="container">
+      <h1>Procesando autenticación con Spotify...</h1>
+      <div class="loader"></div>
+    </div>
 
     <script>
       import { encrypt, decrypt } from "../lib/crypto.js";
@@ -42,7 +82,7 @@
           //console.log("🔓 Token desencriptado:", decryptedToken);
 
           // Guardar en cookie
-          document.cookie =  `access_token=${encryptedStr}; expires=${expireDate}; path=/`;
+          document.cookie =  `access_token=${token}; expires=${expireDate}; path=/`;
 
           // Redirigir
           window.location.href = "/";

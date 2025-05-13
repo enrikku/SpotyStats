@@ -12,21 +12,9 @@ export function setCookie(name, value, expiresInSeconds = 3600) {
 }
 
 export async function getAccesTokenCookie() {
-  const cookie = getCookie("access_token") || "";
-  const encryptedToken = JSON.parse(decodeURIComponent(cookie));
-
-  const token = await decrypt(
-    encryptedToken,
-    import.meta.env.PUBLIC_CRYPT_PSSWD
-  );
-
-  return token;
+  return getCookie("access_token") || "";
 }
 
-export async function getAccessTokenFromCookies(cookies, secret) {
-  const cookie = cookies.get("access_token")?.value || "";
-  const encryptedToken = JSON.parse(decodeURIComponent(cookie));
-
-  const token = await decrypt(encryptedToken, secret);
-  return token;
+export async function getAccessTokenFromCookies(cookies) {
+  return cookies.get("access_token")?.value || "";
 }

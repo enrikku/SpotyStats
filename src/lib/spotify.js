@@ -1,21 +1,21 @@
-  export async function getTopTracks(access_token, time_range = "medium_term") {
-    const res = await fetch(
-      `https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=${time_range}`,
-      {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-        },
-      }
-    );
-  
-    if (!res.ok) {
-      throw new Error("❌ Error al obtener top tracks: " + res.status);
+export async function getTopTracks(access_token, time_range = "medium_term") {
+  const res = await fetch(
+    `https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=${time_range}`,
+    {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
     }
-  
-    const data = await res.json();
-    return data.items; // contiene las canciones
+  );
+
+  if (!res.ok) {
+    throw new Error("❌ Error al obtener top tracks: " + res.status);
   }
-  
+
+  const data = await res.json();
+  return data.items; // contiene las canciones
+}
+
 export async function getTopArtists(access_token, time_range = "medium_term") {
   const res = await fetch(
     `https://api.spotify.com/v1/me/top/artists?limit=50&time_range=${time_range}`,
@@ -45,10 +45,16 @@ export async function getTopGenres(access_token, time_range = "medium_term") {
     return acc;
   }, {});
 
-  // Convertir a array y ordenar por conteo
+  // Calcular el total de apariciones de géneros
+  const totalGenres = Object.values(genreCounts).reduce((sum, count) => sum + count, 0);
+
+  // Convertir a array, calcular porcentajes y ordenar
   const sortedGenres = Object.entries(genreCounts)
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count);
+    .map(([name, count]) => ({
+      name,
+      percentage: Math.round((count / totalGenres) * 100)
+    }))
+    .sort((a, b) => b.percentage - a.percentage);
 
   return sortedGenres;
 }
@@ -115,3 +121,20 @@ export async function createPlaylist(access_token, tracks, time_range) {
 
   return playlistData;
 }
+
+export async function getAudioFeatures(access_token, track_id) {
+  const res = await fetch(`https://api.spotify.com/v1/audio-features/${track_id}`, {
+    headers: {
+      Authorization: `Bearer ${access_token}`,
+    }
+  });
+
+  if (!res.ok) {
+    throw new Error("❌ Error al obtener las características de audio: " + res.status);
+    console.log(res);
+  }
+
+  const data = await res.json();
+  return data; // ✅ Esto es el objeto con valence, energy, tempo, etc.
+}
+
