@@ -6,4 +6,30 @@ import GridTopTracks from "../components/GridTopTracks.astro";
 
 <MainLayout content={{ title: "Top Tracks" }}>
   <GridTopTracks />
+  <button 
+    id="scrollButton"
+    class="btn btn-primary sticky bottom-4 w-full md:w-[20%] lg:w-[11%] mx-auto block text-lg font-bold shadow-lg hover:scale-105 transition-transform bg-gradient-to-r from-green-500 to-green-600 border-none"
+    onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})"
+  >
+    Create Playlist ⬇️
+  </button>
+
+  <script>
+    const button = document.getElementById('scrollButton');
+    
+    if (button) {
+      window.addEventListener('scroll', () => {
+        const scrollPosition = window.scrollY + window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        
+        if (scrollPosition >= documentHeight - 100) {
+          button.style.opacity = '0';
+          button.style.pointerEvents = 'none';
+        } else {
+          button.style.opacity = '1';
+          button.style.pointerEvents = 'auto';
+        }
+      });
+    }
+  </script>
 </MainLayout>
