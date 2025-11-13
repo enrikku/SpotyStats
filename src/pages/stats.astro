@@ -1,342 +1,311 @@
 ---
 import MainLayout from "../layouts/MainLayout.astro";
+import MiniCardStats from "../components/MiniCardStats.astro";
+import TopArtistItem from "../components/TopArtistItem.astro";
+import Loading from "../components/Loading.astro";
 ---
 
 <MainLayout content={{ title: "History Stats" }}>
-    <section class="p-6 max-w-3xl mx-auto text-white">
-        <h1 class="text-3xl font-bold text-center mb-6">
-            Upload Your Spotify History
-        </h1>
+  <Loading />
+  <section class="p-6 max-w-7xl mx-auto text-white">
+    <div id="divDataNoLoaded" class="flex flex-col items-center mt-10">
+      <h1 class="text-4xl font-extrabold text-center mb-4 text-white">
+        Upload Your Spotify History
+      </h1>
 
-        <!-- Tarjeta principal -->
+      <p class="text-gray-400 text-center max-w-md mb-6">
+        Upload your <b>Streaming History JSON</b> files to generate your personalized
+        listening stats.
+      </p>
+
+      <div
+        class="bg-[#0f172a] p-8 rounded-2xl shadow-xl border border-gray-700 max-w-md w-full flex flex-col items-center gap-5"
+      >
+        <!-- Icono moderno -->
         <div
-            class="bg-[#111827] p-6 rounded-xl shadow-lg border border-gray-700"
+          class="bg-[#1e293b] p-4 rounded-full shadow-md border border-gray-600"
         >
-            <p class="mb-4 text-gray-300">
-                Upload your Spotify <b>Streaming History JSON</b> files to generate
-                your stats.
-            </p>
-
-            <!-- Estilo del botón que abre el selector de archivos -->
-            <label
-                for="jsonInput"
-                class="cursor-pointer px-4 py-3 bg-[#1f2937] hover:bg-[#374151] transition rounded-lg block w-fit text-gray-200 border border-gray-600"
-            >
-                📁 Select JSON files
-            </label>
-
-            <!-- Input oculto -->
-            <input
-                type="file"
-                id="jsonInput"
-                class="hidden"
-                accept="application/json"
-                multiple
-            />
-
-            <!-- Botón de procesar -->
-            <button
-                id="processBtn"
-                class="mt-4 px-5 py-3 bg-blue-600 hover:bg-blue-700 transition text-white rounded-lg shadow-md"
-            >
-                Process Files
-            </button>
-
-            <!-- Línea separadora -->
-            <div class="my-6 border-t border-gray-700"></div>
-
-            <!-- Output -->
-            <pre
-                id="output"
-                class="bg-[#1f2937] p-4 rounded-lg text-sm text-gray-300 overflow-auto border border-gray-700">
-            </pre>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-10 h-10 text-green-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 12l-4 4m0 0l-4-4m4 4V4"
+            ></path>
+          </svg>
         </div>
-    </section>
 
-    <script is:inline>
-        /**
-         * @typedef {Object} RootObject
-         * @property {string} ts
-         * @property {string} platform
-         * @property {number} ms_played
-         * @property {string} conn_country
-         * @property {string} ip_addr
-         * @property {string=} master_metadata_track_name
-         * @property {string=} master_metadata_album_artist_name
-         * @property {string=} master_metadata_album_album_name
-         * @property {string=} spotify_track_uri
-         * @property {string=} episode_name
-         * @property {string=} episode_show_name
-         * @property {string=} spotify_episode_uri
-         * @property {boolean} shuffle
-         * @property {boolean} skipped
-         * @property {string} reason_start
-         * @property {string} reason_end
-         * @property {boolean} incognito_mode
-         */
+        <p class="text-gray-300 text-center">
+          Drag and drop your <b>.json</b> files or choose them manually.
+        </p>
 
-        /** @type {RootObject[]} */
-        let allData = [];
+        <!-- Botón -->
+        <label
+          for="jsonInput"
+          class="cursor-pointer px-6 py-3 bg-green-600 hover:bg-green-700 transition-colors text-white font-medium rounded-lg shadow-md w-fit"
+        >
+          📁 Select JSON Files
+        </label>
 
-        const input = document.getElementById("jsonInput");
-        const output = document.getElementById("output");
-        const processBtn = document.getElementById("processBtn");
+        <!-- Input oculto -->
+        <input
+          type="file"
+          id="jsonInput"
+          class="hidden"
+          accept="application/json"
+          multiple
+        />
+      </div>
+    </div>
 
-        processBtn.addEventListener("click", async () => {
-            const files = input.files;
-            if (!files.length) {
-                output.textContent = "No files selected";
-                return;
-            }
+    <div id="divDataLoaded" class="hidden">
+      <div class="grid grid-cols-2 gap-4 sm:gap-6">
+        <MiniCardStats title="Total Songs Played" idP="totalSongsPlayed" />
+        <MiniCardStats title="Different Songs" idP="diferentSongs" />
+        <MiniCardStats title="Total Minutes" idP="totalMinutes" />
+        <MiniCardStats title="Different Artists" idP="diferentArtists" />
+        <MiniCardStats title="Total Hours" idP="totalHours" />
+        <MiniCardStats title="Different Albums" idP="diferentAlbums" />
+        <div class="col-span-2 grid place-items-center gap-4 sm:gap-6">
+          <MiniCardStats title="Total Days" idP="totalDays" />
+        </div>
+      </div>
 
-            allData = [];
+      <div class="divider my-2 sm:my-4"></div>
 
-            for (const file of files) {
-                const text = await file.text();
+      <!-- Top 100 Listened Artists -->
+      <TopArtistItem />
+      <div
+        id="topArtistsContainer"
+        class="grid grid-cols-1 sm:grid-cols-4 gap-4"
+      >
+        <h1
+          class="text-2xl sm:text-3xl font-bold mb-2 sm:mb-4 col-span-4 text-center"
+        >
+          Top 100 Listened Artists
+        </h1>
+      </div>
 
-                try {
-                    /** @type {RootObject[]} */
-                    const json = JSON.parse(text);
+      <!-- Top 100 Listened Songs -->
+    </div>
+    <div class="text-center text-sm text-base-content/70">
+      <p>
+        Note: All processing is done locally in your browser. Your data is not
+        uploaded or stored anywhere.
+      </p>
+    </div>
+  </section>
 
-                    allData.push(...json);
-                } catch (e) {
-                    output.textContent += "\\nError reading " + file.name;
-                }
-            }
+  <script>
+    import { array } from "astro:schema";
+    import { getSong, getArtist } from "../lib/spotify";
+    import { getAccesTokenCookie } from "../lib/utils";
 
-            const stats = getArtistStats(allData, "Violadores del Verso");
-            console.log(stats);
+    let allData = [];
 
-            var ms = 0;
-            var total = 0;
+    const input:any = document.getElementById("jsonInput") ;
+    const divDataNoLoaded = document.getElementById("divDataNoLoaded");
 
-            var fechaMasAntigua = null;
-            var fechaMasActual = null;
+    input?.addEventListener("change", async () => {
+      const files = input.files;
+      if (!files.length) return;
 
-            for (const d of allData) {
-                var artist = d.master_metadata_album_artist_name;
+      allData = [];
 
-                if (
-                    artist != null &&
-                    artist.toLowerCase() == "violadores del verso"
-                ) {
-                    // sumatorio básico
-                    ms += d.ms_played;
-                    total++;
+      for (const file of files) {
+        const text = await file.text();
 
-                    // obtener fecha del registro
-                    const fecha = new Date(d.ts);
+        try {
+          const json = JSON.parse(text);
+          allData.push(...json);
+        } catch (e) {
+          console.error("Error reading " + file.name);
+        }
+      }
 
-                    // establecer fecha más antigua
-                    if (fechaMasAntigua === null || fecha < fechaMasAntigua) {
-                        fechaMasAntigua = fecha;
-                    }
+      processData(allData);
+    });
 
-                    // establecer fecha más reciente
-                    if (fechaMasActual === null || fecha > fechaMasActual) {
-                        fechaMasActual = fecha;
-                    }
-                }
-            }
+    function filtredOnlySongs(data: any) {
+      return data.filter(
+        (record: any) => record.master_metadata_album_artist_name
+      );
+    }
 
-            console.log("Total: " + total);
-            console.log("ms: " + ms);
-            console.log("min: " + ms / 60000);
-            console.log("h: " + ms / 3600000);
-            console.log("Fecha más antigua:", fechaMasAntigua);
-            console.log("Fecha más actual:", fechaMasActual);
+    function processBasicInfo(songsData: any) {
+      const totalSongsPlayed = document.getElementById("totalSongsPlayed");
+      const diferentSongs = document.getElementById("diferentSongs");
+      const totalMinutes = document.getElementById("totalMinutes");
+      const diferentArtists = document.getElementById("diferentArtists");
+      const totalHours = document.getElementById("totalHours");
+      const diferentAlbums = document.getElementById("diferentAlbums");
+      const totalDays = document.getElementById("totalDays");
 
-            // const stats = buildStatsFm(allData);
-            // console.log(stats);
-        });
+      // Total Songs Played
+      if (totalSongsPlayed)
+        totalSongsPlayed.textContent = `${songsData.length.toLocaleString("en-US")} plays`;
 
-        function normalizeOffline(d) {
-            if (d.offline && d.offline_timestamp) {
-                d.ts = new Date(d.offline_timestamp).toISOString();
-            }
-            return d;
+      // Different Songs
+      const uniqueSongs = new Set(
+        songsData.map(
+          (song: any) =>
+            song.master_metadata_track_name +
+            " - " +
+            song.master_metadata_album_artist_name
+        )
+      ).size;
+      if (diferentSongs) {
+        diferentSongs.textContent = `${uniqueSongs.toLocaleString("en-US")} different songs`;
+      }
+
+      // Total Minutes
+      const totalMinutesPlayed = Math.floor(
+        songsData.reduce((acc: any, song: any) => acc + song.ms_played, 0) /
+          60000
+      );
+      if (totalMinutes) {
+        totalMinutes.textContent = `${totalMinutesPlayed.toLocaleString("en-US")} minutes`;
+      }
+
+      // Different Artists
+      const uniqueArtists = new Set(
+        songsData.map((song: any) => song.master_metadata_album_artist_name)
+      ).size;
+
+      if (diferentArtists)
+        diferentArtists.textContent = `${uniqueArtists.toLocaleString("en-US")} different artists`;
+
+      // Total Hours
+      const totalHoursPlayed = Math.floor(totalMinutesPlayed / 60);
+
+      if (totalHours)
+        totalHours.textContent = `${totalHoursPlayed.toLocaleString("en-US")} hours`;
+
+      // Different Albums
+      const uniqueAlbums = new Set(
+        songsData.map(
+          (song: any) =>
+            song.master_metadata_album_name +
+            " - " +
+            song.master_metadata_album_artist_name
+        )
+      ).size;
+
+      if (diferentAlbums)
+        diferentAlbums.textContent = `${uniqueAlbums.toLocaleString("en-US")} different albums`;
+
+      // Total Days
+      if (totalDays)
+        totalDays.textContent = `${Math.floor(totalHoursPlayed / 24).toLocaleString("en-US")} days`;
+    }
+
+    async function processData(data: any) {
+      const loadingOverlay = document.getElementById("loadingOverlay");
+      if (loadingOverlay) loadingOverlay.classList.remove("hidden");
+      const songsData = filtredOnlySongs(data);
+      const divDataLoaded = document.getElementById("divDataLoaded");
+      // Top 100 Artists
+      const token = await getAccesTokenCookie();
+      const top100Artists = getTop100Artists(songsData);
+
+      processBasicInfo(songsData);
+      await renderTopArtists(top100Artists);
+
+      if (divDataNoLoaded) divDataNoLoaded.className = "hidden";
+      if (divDataLoaded) divDataLoaded.className = "";
+      if (loadingOverlay) loadingOverlay.classList.add("hidden");
+    }
+
+    async function renderTopArtists(top100: any) {
+      var total = top100.length;
+      var count = 0;
+      for (const item of top100) {
+        count++;
+        var trackId = item.idTrack?.split(":")[2];
+
+        var token = await getAccesTokenCookie();
+
+        var sonData = await getSong(token, trackId);
+        var artista = sonData.artists[0].uri.replace("spotify:artist:", "");
+
+        // Pausa REAL y en SERIE
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        var artistData = await getArtist(token, artista);
+        var image = artistData.images[0]?.url || "";
+
+        // Aquí el fix 👇
+        item.artistImage = image;
+        console.log(`Processed ${count} of ${total} artists`);
+      }
+      console.log("Top 100 with images:", top100);
+
+      const container = document.getElementById("topArtistsContainer");
+      const template = document.getElementById("topArtistTemplate");
+
+      if (container == null || template == null) return;
+      container.innerHTML = ""; // limpiar antes
+
+      var i = 0;
+      top100.forEach((item: any) => {
+        i++;
+        const clone: any = template.cloneNode(true);
+        clone.id = ""; // eliminar ID duplicado
+        clone.classList.remove("hidden");
+
+        clone.querySelector(".artist-name").textContent =
+          "#" + i + " " + item.artist;
+        clone.querySelector(".artist-minutes").textContent =
+          `${item.minutes} minutos escuchados`;
+        clone.querySelector(".artist-plays").textContent =
+          `${item.plays} reproducciones`;
+
+        clone.querySelector(".artist-image").src = item.artistImage;
+
+        container.appendChild(clone);
+      });
+    }
+
+    function getTop100Artists(data: any) {
+      const artistsMap = new Map();
+
+      for (const record of data) {
+        const artist = record.master_metadata_album_artist_name;
+        const ms = record.ms_played || 0;
+
+        if (!artist) continue; // ignorar registros sin artista
+
+        if (!artistsMap.has(artist)) {
+          artistsMap.set(artist, {
+            artist,
+            totalMs: 0,
+            plays: 0,
+            idTrack: record.spotify_track_uri,
+          });
         }
 
-        function mergeFragments(data) {
-            const merged = [];
-            let buffer = null;
+        const entry = artistsMap.get(artist);
+        entry.totalMs += ms;
+        entry.plays += 1;
+      }
 
-            for (const d of data) {
-                if (
-                    buffer &&
-                    d.master_metadata_track_name ===
-                        buffer.master_metadata_track_name &&
-                    d.master_metadata_album_artist_name ===
-                        buffer.master_metadata_album_artist_name &&
-                    Math.abs(new Date(d.ts) - new Date(buffer.lastTs)) < 20000 // 20s
-                ) {
-                    buffer.ms_played += d.ms_played;
-                    buffer.lastTs = d.ts;
-                } else {
-                    if (buffer) merged.push(buffer);
-                    buffer = { ...d, lastTs: d.ts };
-                }
-            }
-            if (buffer) merged.push(buffer);
-            return merged;
-        }
+      const result = [...artistsMap.values()]
+        .sort((a, b) => b.totalMs - a.totalMs)
+        .slice(0, 100)
+        .map((item) => ({
+          artist: item.artist,
+          minutes: Math.floor(item.totalMs / 60000),
+          plays: item.plays,
+          idTrack: item.idTrack,
+        }));
 
-        function isValidPlay(d) {
-            return (
-                d.master_metadata_track_name &&
-                d.master_metadata_album_artist_name &&
-                d.ms_played >= 30000 // mínimo 30s
-            );
-        }
-
-        function getArtistStats(allData, artistName) {
-            // 1 Normalizar offline
-            let norm = allData.map(normalizeOffline);
-
-            // 2 Ordenar por fecha
-            norm.sort((a, b) => new Date(a.ts) - new Date(b.ts));
-
-            // 3 Fusionar fragmentos
-            let merged = mergeFragments(norm);
-
-            // 4 Filtrar reproducciones válidas
-            let valid = merged.filter(isValidPlay);
-
-            // 5 Filtrar por artista concreto
-            let artist = artistName.toLowerCase();
-            let plays = valid.filter(
-                (d) =>
-                    d.master_metadata_album_artist_name?.toLowerCase() ===
-                    artist,
-            );
-
-            // 6 Calcular stats
-            const ms = plays.reduce((acc, d) => acc + d.ms_played, 0);
-
-            return {
-                reproducciones: plays.length,
-                ms,
-                minutos: ms / 60000,
-                horas: ms / 3600000,
-            };
-        }
-
-        // function normalizeOffline(d) {
-        //     if (d.offline && d.offline_timestamp) {
-        //         return {
-        //             ...d,
-        //             ts: new Date(d.offline_timestamp).toISOString(),
-        //         };
-        //     }
-        //     return d;
-        // }
-
-        // function mergeFragments(data) {
-        //     const merged = [];
-        //     let buffer = null;
-
-        //     for (const d of data) {
-        //         if (
-        //             buffer &&
-        //             d.master_metadata_track_name ===
-        //                 buffer.master_metadata_track_name &&
-        //             d.master_metadata_album_artist_name ===
-        //                 buffer.master_metadata_album_artist_name &&
-        //             Math.abs(new Date(d.ts) - new Date(buffer.lastTs)) < 20000 // 20s
-        //         ) {
-        //             buffer.ms_played += d.ms_played;
-        //             buffer.lastTs = d.ts;
-        //         } else {
-        //             if (buffer) merged.push(buffer);
-        //             buffer = { ...d, lastTs: d.ts };
-        //         }
-        //     }
-
-        //     if (buffer) merged.push(buffer);
-        //     return merged;
-        // }
-
-        // function isValidPlay(d) {
-        //     return (
-        //         d.master_metadata_track_name &&
-        //         d.master_metadata_album_artist_name &&
-        //         d.ms_played >= 30000 // ≥ 30 segundos
-        //     );
-        // }
-
-        // function buildStats(data) {
-        //     const totalMs = data.reduce((acc, d) => acc + d.ms_played, 0);
-
-        //     const uniqueTracks = new Set(
-        //         data.map(
-        //             (d) =>
-        //                 `${d.master_metadata_track_name}:::${d.master_metadata_album_artist_name}`,
-        //         ),
-        //     ).size;
-
-        //     const uniqueArtists = new Set(
-        //         data.map((d) => d.master_metadata_album_artist_name),
-        //     ).size;
-
-        //     // Top tracks
-        //     const trackMap = {};
-        //     for (const d of data) {
-        //         const key = `${d.master_metadata_track_name}:::${d.master_metadata_album_artist_name}`;
-        //         if (!trackMap[key]) {
-        //             trackMap[key] = {
-        //                 track: d.master_metadata_track_name,
-        //                 artist: d.master_metadata_album_artist_name,
-        //                 ms: 0,
-        //                 count: 0,
-        //             };
-        //         }
-        //         trackMap[key].ms += d.ms_played;
-        //         trackMap[key].count++;
-        //     }
-        //     const topTracks = Object.values(trackMap)
-        //         .sort((a, b) => b.ms - a.ms)
-        //         .slice(20);
-
-        //     // Top artists
-        //     const artistMap = {};
-        //     for (const d of data) {
-        //         const a = d.master_metadata_album_artist_name;
-        //         if (!artistMap[a]) {
-        //             artistMap[a] = { artist: a, ms: 0, count: 0 };
-        //         }
-        //         artistMap[a].ms += d.ms_played;
-        //         artistMap[a].count++;
-        //     }
-        //     const topArtists = Object.values(artistMap)
-        //         .sort((a, b) => b.ms - a.ms)
-        //         .slice(20);
-
-        //     return {
-        //         totalMs,
-        //         totalMinutes: Math.round(totalMs / 60000),
-        //         totalHours: Math.round(totalMs / 3600000),
-        //         uniqueTracks,
-        //         uniqueArtists,
-        //         topTracks,
-        //         topArtists,
-        //     };
-        // }
-
-        // function buildStatsFm(allData) {
-        //     // 1. Normalizar offline
-        //     let norm = allData.map(normalizeOffline);
-
-        //     // 2. Ordenar por timestamp
-        //     norm.sort((a, b) => new Date(a.ts) - new Date(b.ts));
-
-        //     // 3. Fusionar fragmentos
-        //     const merged = mergeFragments(norm);
-
-        //     // 4. Filtrar escuchas válidas
-        //     const valid = merged.filter(isValidPlay);
-
-        //     // 5. Crear estadísticas finales
-        //     return buildStats(valid);
-        // }
-    </script>
+      return result;
+    }
+  </script>
 </MainLayout>
