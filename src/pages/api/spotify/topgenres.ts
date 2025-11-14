@@ -102,7 +102,7 @@ export const GET: APIRoute = async ({ request }) => {
     .map(([genre, count]) => ({ genre, count }));
 
   // Guardar cache → 60 segundos
-  setCache(cacheKey, sorted, 60);
+  setCache(cacheKey, sorted, 86400);
 
   return new Response(JSON.stringify(sorted), {
     headers: { "Content-Type": "application/json", "X-Cache": "MISS" }

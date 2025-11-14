@@ -62,7 +62,7 @@ export const GET: APIRoute = async ({ request }) => {
   );
 
   // ---- 💾 Guardar en caché por 60s ----
-  setCache(cacheKey, data, 60);
+  setCache(cacheKey, data, 86400 );
 
   return new Response(JSON.stringify(data), {
     headers: { "Content-Type": "application/json", "X-Cache": "MISS" }

@@ -57,7 +57,7 @@ export const GET: APIRoute = async ({ request }) => {
     const data = await spotifyRequest(sessionId, "https://api.spotify.com/v1/me");
 
     // Guardar en caché 5 minutos
-    setCache(cacheKey, data, 300);
+    setCache(cacheKey, data, 86400 );
 
     return new Response(JSON.stringify(data), {
         headers: { "Content-Type": "application/json", "X-Cache": "MISS" }
