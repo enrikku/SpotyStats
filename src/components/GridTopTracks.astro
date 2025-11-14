@@ -3,20 +3,19 @@ import Image from "astro/components/Image.astro";
 ---
 
 <script>
-  import { getTopTracks, createPlaylist } from "../lib/spotify";
-  import { getAccesTokenCookie } from "../lib/utils";
-
   const tabs = document.querySelectorAll(
     ".tab"
   ) as NodeListOf<HTMLAnchorElement>;
   const gridContainer = document.getElementById("tracksGrid") as HTMLDivElement;
-  const createPlaylistBtn = document.getElementById("createPlaylistBtn") as HTMLButtonElement;
+  const createPlaylistBtn = document.getElementById(
+    "createPlaylistBtn"
+  ) as HTMLButtonElement;
 
-  const token = await getAccesTokenCookie();
 
   type TimeRange = "short_term" | "medium_term" | "long_term";
   type SpotifyTrack = {
     name: string;
+    uri: string;
     album: {
       name: string;
       images: { url: string }[];
@@ -44,7 +43,9 @@ import Image from "astro/components/Image.astro";
     currentRange = range;
 
     // Mostrar loading state
-    gridContainer.innerHTML = Array(50).fill(`
+    gridContainer.innerHTML = Array(50)
+      .fill(
+        `
       <div class="card bg-base-200 shadow-xl animate-pulse">
         <div class="aspect-square bg-base-300"></div>
         <div class="card-body p-4">
@@ -52,10 +53,14 @@ import Image from "astro/components/Image.astro";
           <div class="h-3 bg-base-300 rounded w-1/2 mt-2"></div>
         </div>
       </div>
-    `).join('');
+    `
+      )
+      .join("");
 
     if (!cachedTracks[range]) {
-      cachedTracks[range] = await getTopTracks(token, range);
+      cachedTracks[range] = await fetch(
+        `/api/spotify/toptracks?time_range=${range}`
+      ).then((res) => res.json());
     }
 
     const tracks = cachedTracks[range];
@@ -64,11 +69,13 @@ import Image from "astro/components/Image.astro";
     const fragment = document.createDocumentFragment();
     const cards: HTMLElement[] = [];
 
-    (tracks as SpotifyTrack[]).forEach((track: SpotifyTrack, i: number) => {
-      const card = document.createElement("div");
-      card.className = "card bg-base-200 shadow-xl group hover:bg-base-300 transition-colors opacity-0";
-      card.style.transition = "opacity 0.3s ease-in-out";
-      card.innerHTML = `
+    (tracks.items as SpotifyTrack[]).forEach(
+      (track: SpotifyTrack, i: number) => {
+        const card = document.createElement("div");
+        card.className =
+          "card bg-base-200 shadow-xl group hover:bg-base-300 transition-colors opacity-0";
+        card.style.transition = "opacity 0.3s ease-in-out";
+        card.innerHTML = `
         <figure class="relative">
           <img src="${track.album.images[0]?.url}" alt="${track.name}" class="w-full aspect-square object-cover" loading="lazy" />
           <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -88,14 +95,15 @@ import Image from "astro/components/Image.astro";
         </figure>
         <div class="card-body p-4">
           <h2 class="card-title text-base truncate">${track.name}</h2>
-          <a href="${track.artists[0].external_urls.spotify}" target="_blank" rel="noopener noreferrer" class="text-sm text-base-content/70 truncate hover:text-primary transition-colors">${track.artists.map(a => a.name).join(", ")}</a>
+          <a href="${track.artists[0].external_urls.spotify}" target="_blank" rel="noopener noreferrer" class="text-sm text-base-content/70 truncate hover:text-primary transition-colors">${track.artists.map((a) => a.name).join(", ")}</a>
         </div>
       `;
-      cards.push(card);
-      fragment.appendChild(card);
-    });
+        cards.push(card);
+        fragment.appendChild(card);
+      }
+    );
 
-    gridContainer.innerHTML = '';
+    gridContainer.innerHTML = "";
     gridContainer.appendChild(fragment);
 
     // Revelar las cards gradualmente
@@ -119,10 +127,37 @@ import Image from "astro/components/Image.astro";
   createPlaylistBtn.addEventListener("click", async () => {
     try {
       const tracks = cachedTracks[currentRange];
-      
+
       if (tracks) {
-        var a = await createPlaylist(token, tracks, currentRange);
-        console.log(a);
+        const result = await fetch("/api/spotify/createplaylist", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: ` ${currentRange} - ${Date.now()}`,
+            description: `Tus canciones más escuchadas en ${currentRange} - ${Date.now()}`,
+            public: false,
+          }),
+        });
+
+        const playlist = await result.json();
+
+        if (!result.ok) {
+          throw new Error(playlist.error || "Error creating playlist");
+        }
+
+        const tracksUri = tracks.items.map((track: SpotifyTrack) => track.uri);
+
+        const addTracksResult = await fetch("/api/spotify/addtracks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            playlistId: playlist.id,
+            uris: tracksUri,
+          }),
+        });
+
+        const data = await addTracksResult.json();
+
         alert("¡Playlist creada con éxito!");
       }
     } catch (error) {
@@ -136,18 +171,35 @@ import Image from "astro/components/Image.astro";
 </script>
 
 <div class="flex flex-col gap-8 max-w-7xl mx-auto px-4 pb-10">
-  <div role="tablist" class="tabs tabs-lift justify-center text-sm sm:text-lg font-medium" id="tabs">
+  <div
+    role="tablist"
+    class="tabs tabs-lift justify-center text-sm sm:text-lg font-medium"
+    id="tabs"
+  >
     <p class="tab tab-active" data-range="short_term">Last 4 Weeks</p>
     <p class="tab" data-range="medium_term">Last 6 Months</p>
     <p class="tab" data-range="long_term">Last 12 Months</p>
   </div>
 
-  <div id="tracksGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+  <div
+    id="tracksGrid"
+    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+  >
   </div>
 
   <div class="flex justify-center mt-8">
     <button id="createPlaylistBtn" class="btn btn-primary gap-2">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
         <line x1="12" y1="5" x2="12" y2="19"></line>
         <line x1="5" y1="12" x2="19" y2="12"></line>
       </svg>

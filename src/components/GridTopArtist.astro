@@ -1,17 +1,14 @@
 ---
-import Image from "astro/components/Image.astro";
+
 ---
 
 <script>
-  import { getTopArtists } from "../lib/spotify";
-  import { getAccesTokenCookie } from "../lib/utils";
-
   const tabs = document.querySelectorAll(
     ".tab"
   ) as NodeListOf<HTMLAnchorElement>;
-  const artistsContainer = document.getElementById("artistsContainer") as HTMLDivElement;
-
-  const token = await getAccesTokenCookie();
+  const artistsContainer = document.getElementById(
+    "artistsContainer"
+  ) as HTMLDivElement;
 
   type TimeRange = "short_term" | "medium_term" | "long_term";
   type SpotifyArtist = {
@@ -33,27 +30,24 @@ import Image from "astro/components/Image.astro";
     long_term: null,
   };
 
-  async function getArtistInfo(id: string) {
-    const res = await fetch(`https://api.spotify.com/v1/artists/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return await res.json();
-  }
-
   async function loadArtists(range: TimeRange = "short_term") {
     // Mostrar loading state
-    artistsContainer.innerHTML = Array(50).fill(`
+    artistsContainer.innerHTML = Array(50)
+      .fill(
+        `
       <div class="flex flex-col items-center gap-2 p-2 sm:p-4 animate-pulse">
         <div class="relative aspect-square w-full">
           <div class="w-full h-full rounded-lg bg-base-300"></div>
         </div>
       </div>
-    `).join('');
+    `
+      )
+      .join("");
 
     if (!cachedArtists[range]) {
-      cachedArtists[range] = await getTopArtists(token, range);
+      cachedArtists[range] = await fetch(
+        `/api/spotify/topartists?time_range=${range}`
+      ).then((res) => res.json());
     }
 
     const artists = cachedArtists[range];
@@ -62,11 +56,13 @@ import Image from "astro/components/Image.astro";
     const fragment = document.createDocumentFragment();
     const cards: HTMLElement[] = [];
 
-    (artists as SpotifyArtist[]).forEach((artist: SpotifyArtist, i: number) => {
-      const artistCard = document.createElement("div");
-      artistCard.className = "flex flex-col items-center gap-2 p-2 sm:p-4 hover:scale-105 transition-transform opacity-0";
-      artistCard.style.transition = "opacity 0.3s ease-in-out";
-      artistCard.innerHTML = `
+    (artists.items as SpotifyArtist[]).forEach(
+      (artist: SpotifyArtist, i: number) => {
+        const artistCard = document.createElement("div");
+        artistCard.className =
+          "flex flex-col items-center gap-2 p-2 sm:p-4 hover:scale-105 transition-transform opacity-0";
+        artistCard.style.transition = "opacity 0.3s ease-in-out";
+        artistCard.innerHTML = `
         <a href="${artist.external_urls.spotify}" target="_blank" rel="noopener noreferrer" class="w-full">
           <div class="relative aspect-square group">
             <img src="${artist.images[0]?.url}" alt="${artist.name}" class="w-full h-full rounded-lg shadow-lg object-cover" loading="lazy"/>
@@ -83,11 +79,12 @@ import Image from "astro/components/Image.astro";
           </div>
         </a>
       `;
-      cards.push(artistCard);
-      fragment.appendChild(artistCard);
-    });
+        cards.push(artistCard);
+        fragment.appendChild(artistCard);
+      }
+    );
 
-    artistsContainer.innerHTML = '';
+    artistsContainer.innerHTML = "";
     artistsContainer.appendChild(fragment);
 
     // Revelar las cards gradualmente
@@ -112,13 +109,20 @@ import Image from "astro/components/Image.astro";
   loadArtists("short_term");
 </script>
 
-<div role="tablist" class="tabs tabs-lift justify-center text-sm sm:text-base" id="tabs">
+<div
+  role="tablist"
+  class="tabs tabs-lift justify-center text-sm sm:text-base"
+  id="tabs"
+>
   <p class="tab tab-active" data-range="short_term">Last 4 Weeks</p>
   <p class="tab" data-range="medium_term">Last 6 Months</p>
   <p class="tab" data-range="long_term">Last 12 Months</p>
 </div>
 
 <div class="p-2 sm:p-5">
-  <div id="artistsContainer" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-6">
+  <div
+    id="artistsContainer"
+    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-6"
+  >
   </div>
 </div>

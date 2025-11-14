@@ -1,0 +1,307 @@
+<!-- Player -->
+<div
+  id="player"
+  class="hidden sm:flex items-center gap-4 bg-base-200 px-4 py-3 rounded-xl shadow-md w-full max-w-[700px]"
+>
+  <!-- Imagen -->
+  <img
+    id="player-img"
+    class="w-14 h-14 rounded-lg object-cover shrink-0"
+    src=""
+    alt="Track image"
+  />
+
+  <!-- Info + progress -->
+  <div class="flex flex-col grow min-w-0">
+    <span id="player-title" class="font-semibold text-sm truncate">No song</span
+    >
+    <span id="player-artist" class="text-xs opacity-70 truncate">—</span>
+
+    <!-- Progress bar -->
+    <div class="w-full mt-2">
+      <div id="progress-container" class="w-full h-1 bg-base-300 rounded">
+        <div id="progress-bar" class="h-1 bg-primary" style="width: 0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controles -->
+  <div class="flex items-center gap-2 shrink-0">
+    <button id="btn-prev" class="btn btn-sm btn-ghost">
+      <img src="/previous.png" alt="" class="w-7" />
+    </button>
+
+    <button id="btn-play" class="btn btn-sm btn-ghost">
+      <img src="/play.png" alt="" id="img-play" class="w-8" />
+      <img src="/pause.png" alt="" id="img-pause" class="w-8 hidden" />
+    </button>
+
+    <button id="btn-next" class="btn btn-sm btn-ghost">
+      <img src="/next.png" alt="" class="w-7" />
+    </button>
+  </div>
+</div>
+
+<style>
+    @media (max-width: 639px) {
+        #player {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            max-width: 100%;
+            border-radius: 0;
+            display: flex !important;
+        }
+    }
+</style>
+
+<!-- End Player -->
+
+<script>
+  interface NowPlayingResponse {
+    device: Device;
+    repeat_state: string;
+    shuffle_state: boolean;
+    context: Context;
+    timestamp: number;
+    progress_ms: number;
+    is_playing: boolean;
+    item: Item;
+    currently_playing_type: string;
+    actions: Actions;
+  }
+
+  interface Actions {
+    interrupting_playback: boolean;
+    pausing: boolean;
+    resuming: boolean;
+    seeking: boolean;
+    skipping_next: boolean;
+    skipping_prev: boolean;
+    toggling_repeat_context: boolean;
+    toggling_shuffle: boolean;
+    toggling_repeat_track: boolean;
+    transferring_playback: boolean;
+  }
+
+  interface Context {
+    type: string;
+    href: string;
+    external_urls: ExternalUrls;
+    uri: string;
+  }
+
+  interface ExternalUrls {
+    spotify: string;
+  }
+
+  interface Device {
+    id: string;
+    is_active: boolean;
+    is_private_session: boolean;
+    is_restricted: boolean;
+    name: string;
+    type: string;
+    volume_percent: number;
+    supports_volume: boolean;
+  }
+
+  interface Item {
+    album: Album;
+    artists: Artist[];
+    available_markets: string[];
+    disc_number: number;
+    duration_ms: number;
+    explicit: boolean;
+    external_ids: ExternalIDS;
+    external_urls: ExternalUrls;
+    href: string;
+    id: string;
+    is_playable: boolean;
+    linked_from: LinkedFrom;
+    restrictions: Restrictions;
+    name: string;
+    popularity: number;
+    preview_url: string;
+    track_number: number;
+    type: string;
+    uri: string;
+    is_local: boolean;
+  }
+
+  interface Album {
+    album_type: string;
+    total_tracks: number;
+    available_markets: string[];
+    external_urls: ExternalUrls;
+    href: string;
+    id: string;
+    images: Image[];
+    name: string;
+    release_date: string;
+    release_date_precision: string;
+    restrictions: Restrictions;
+    type: string;
+    uri: string;
+    artists: Artist[];
+  }
+
+  interface Artist {
+    external_urls: ExternalUrls;
+    href: string;
+    id: string;
+    name: string;
+    type: string;
+    uri: string;
+  }
+
+  interface Image {
+    url: string;
+    height: number;
+    width: number;
+  }
+
+  interface Restrictions {
+    reason: string;
+  }
+
+  interface ExternalIDS {
+    isrc: string;
+    ean: string;
+    upc: string;
+  }
+
+  interface LinkedFrom {}
+
+  let isPlaying = false;
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    const player = document.getElementById("player");
+    const title = document.getElementById("player-title");
+    const artist = document.getElementById("player-artist");
+    const playerImg = document.getElementById("player-img") as HTMLImageElement;
+
+    const btnPrev = document.getElementById("btn-prev");
+    const btnPlay = document.getElementById("btn-play");
+    const btnNext = document.getElementById("btn-next");
+
+    const imgPlay = document.getElementById("img-play") as HTMLImageElement;
+    const imgPause = document.getElementById("img-pause") as HTMLImageElement;
+
+    const progressBar = document.getElementById(
+      "progress-bar"
+    ) as HTMLDivElement;
+
+    let lastProgress = 0;
+    let lastDuration = 1;
+    let lastUpdateTimestamp = 0;
+
+    async function fetchNowPlaying(): Promise<NowPlayingResponse | null> {
+      try {
+        const res = await fetch("/api/spotify/player/now-playing");
+        if (!res.ok) return null;
+        return await res.json();
+      } catch {
+        return null;
+      }
+    }
+
+    function updateProgressSmooth() {
+      if (!isPlaying) {
+        progressBar.style.width = "0%";
+        return;
+      }
+
+      const now = Date.now();
+      const elapsed = now - lastUpdateTimestamp;
+
+      const newProgress = lastProgress + elapsed;
+
+      const pct = Math.min((newProgress / lastDuration) * 100, 100);
+
+      progressBar.style.width = pct + "%";
+
+      requestAnimationFrame(updateProgressSmooth);
+    }
+
+    async function updateNowPlaying() {
+      const playing = await fetchNowPlaying();
+
+      console.log("Now Playing:", playing);
+      if (!playing || !playing.is_playing) {
+        //if (player) player.style.display = "none";
+
+        imgPlay.classList.remove("hidden");
+        imgPause.classList.add("hidden");
+        progressBar.style.width = "0%";
+
+        isPlaying = false;
+        return;
+      }
+
+      lastProgress = playing.progress_ms ?? 0;
+      lastDuration = playing.item.duration_ms ?? 1;
+      lastUpdateTimestamp = Date.now();
+      await updateProgressSmooth();
+      isPlaying = true;
+
+      if (player) player.style.display = "flex";
+      if (title) {
+        title.innerHTML = "";
+        const titleLink = document.createElement("a");
+        titleLink.href = playing.item.external_urls.spotify;
+        titleLink.className = "hover:text-primary truncate";
+        titleLink.textContent = playing.item.name;
+        titleLink.target = "_blank";
+        title.appendChild(titleLink);
+      }
+      if (artist) {
+        artist.innerHTML = "";
+
+        playing.item.artists.forEach((art, i) => {
+          const link = document.createElement("a");
+          link.href = art.external_urls.spotify;
+          link.textContent = art.name;
+          link.target = "_blank";
+          link.className = "hover:text-primary truncate";
+
+          artist.appendChild(link);
+
+          if (i < playing.item.artists.length - 1) {
+            artist.appendChild(document.createTextNode(", "));
+          }
+        });
+      }
+
+      if (playerImg) playerImg.src = playing.item.album.images[2].url;
+
+      if (playing.is_playing) {
+        imgPlay.classList.add("hidden");
+        imgPause.classList.remove("hidden");
+      } else {
+        imgPlay.classList.remove("hidden");
+        imgPause.classList.add("hidden");
+      }
+    }
+
+    async function sendPlayerCommand(endpoint: string) {
+      try {
+        await fetch(`/api/spotify/player/${endpoint}`, { method: "POST" });
+
+        setTimeout(() => updateNowPlaying(), 600);
+      } catch {
+        console.error("Player command failed:", endpoint);
+      }
+    }
+
+    btnPrev?.addEventListener("click", () => sendPlayerCommand("previous"));
+    btnNext?.addEventListener("click", () => sendPlayerCommand("next"));
+    btnPlay?.addEventListener("click", () => sendPlayerCommand("playpause"));
+
+    await updateNowPlaying();
+
+    setInterval(updateNowPlaying, 5000);
+  });
+</script>

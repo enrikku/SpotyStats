@@ -1,0 +1,33 @@
+---
+// create prorps
+interface Props {
+  title: string;
+  description: string;
+  href: string;
+  icon?: string;
+  id?: string;
+}
+
+const { title, description, href, icon, id } = Astro.props;
+---
+
+<a href={href} class="card bg-base-200 hover:bg-base-300 transition-colors">
+  <div class="card-body p-4 sm:p-6">
+    <h2 class="card-title text-base sm:text-lg" id={id}>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-5 w-5 sm:h-6 sm:w-6 text-primary"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+      >
+        <path
+          d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"
+        ></path>
+      </svg>
+      {title}
+    </h2>
+    <p class="text-sm sm:text-base text-base-content/70">
+      {description}
+    </p>
+  </div>
+</a>

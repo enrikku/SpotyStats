@@ -1,54 +1,44 @@
 ---
 import "../styles/global.css";
 import MainLayout from "../layouts/MainLayout.astro";
+import MiniCard from "../components/home/MiniCard.astro";
+import MiniCard2 from "../components/home/MiniCard2.astro";
 ---
 
 <MainLayout content={{ title: "Inicio - Spotify Stats" }}>
-  <div class="flex flex-col gap-6 sm:gap-8 max-w-6xl mx-auto px-4 pb-8 sm:pb-10">
+  <div
+    class="flex flex-col gap-6 sm:gap-8 max-w-6xl mx-auto px-4 pb-8 sm:pb-10"
+  >
     <div class="text-center">
-      <h1 class="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">Bienvenido a SpotyStats</h1>
-      <p class="text-base sm:text-lg text-base-content/70">Descubre tus estadísticas musicales más interesantes</p>
+      <h1 class="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4">
+        Bienvenido a SpotyStats
+      </h1>
+      <p class="text-base sm:text-lg text-base-content/70">
+        Descubre tus estadísticas musicales más interesantes
+      </p>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
       <!-- Tarjeta de Top Artistas -->
-      <a href="/topartists" class="card bg-base-200 hover:bg-base-300 transition-colors">
-        <div class="card-body p-4 sm:p-6">
-          <h2 class="card-title text-base sm:text-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 text-primary" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-            </svg>
-            Top Artistas
-          </h2>
-          <p class="text-sm sm:text-base text-base-content/70">Explora tus artistas más escuchados en diferentes períodos de tiempo</p>
-        </div>
-      </a>
+      <MiniCard
+        title="Top Artistas"
+        description="Explora tus artistas más escuchados en diferentes períodos de tiempo"
+        href="/topartists"
+      />
 
       <!-- Tarjeta de Top Canciones -->
-      <a href="/toptracks" class="card bg-base-200 hover:bg-base-300 transition-colors">
-        <div class="card-body p-4 sm:p-6">
-          <h2 class="card-title text-base sm:text-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 text-primary" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-            </svg>
-            Top Canciones
-          </h2>
-          <p class="text-sm sm:text-base text-base-content/70">Descubre tus canciones favoritas y crea playlists personalizadas</p>
-        </div>
-      </a>
+      <MiniCard
+        title="Top Canciones"
+        description="Descubre tus canciones favoritas y crea playlists personalizadas"
+        href="/toptracks"
+      />
 
       <!-- Tarjeta de Top Géneros -->
-      <a href="/topgenres" class="card bg-base-200 hover:bg-base-300 transition-colors">
-        <div class="card-body p-4 sm:p-6">
-          <h2 class="card-title text-base sm:text-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6 text-primary" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-            </svg>
-            Top Géneros
-          </h2>
-          <p class="text-sm sm:text-base text-base-content/70">Visualiza la distribución de tus géneros musicales favoritos</p>
-        </div>
-      </a>
+      <MiniCard
+        title="Top Géneros"
+        description="Descubre tus canciones favoritas y crea playlists personalizadas"
+        href="/topgenres"
+      />
     </div>
 
     <div class="divider my-2 sm:my-4">Estadísticas Rápidas</div>
@@ -59,8 +49,15 @@ import MainLayout from "../layouts/MainLayout.astro";
         <div class="card-body p-4 sm:p-6">
           <h3 class="card-title text-base sm:text-lg">Artistas Únicos</h3>
           <div class="flex items-center gap-3 sm:gap-4">
-            <div class="text-3xl sm:text-4xl font-bold text-primary" id="uniqueArtists">-</div>
-            <p class="text-sm sm:text-base text-base-content/70">artistas diferentes en tu top</p>
+            <div
+              class="text-3xl sm:text-4xl font-bold text-primary"
+              id="uniqueArtists"
+            >
+              -
+            </div>
+            <p class="text-sm sm:text-base text-base-content/70">
+              artistas diferentes en tu top
+            </p>
           </div>
         </div>
       </div>
@@ -70,8 +67,15 @@ import MainLayout from "../layouts/MainLayout.astro";
         <div class="card-body p-4 sm:p-6">
           <h3 class="card-title text-base sm:text-lg">Géneros Diversos</h3>
           <div class="flex items-center gap-3 sm:gap-4">
-            <div class="text-3xl sm:text-4xl font-bold text-primary" id="uniqueGenres">-</div>
-            <p class="text-sm sm:text-base text-base-content/70">géneros musicales diferentes</p>
+            <div
+              class="text-3xl sm:text-4xl font-bold text-primary"
+              id="uniqueGenres"
+            >
+              -
+            </div>
+            <p class="text-sm sm:text-base text-base-content/70">
+              géneros musicales diferentes
+            </p>
           </div>
         </div>
       </div>
@@ -79,7 +83,10 @@ import MainLayout from "../layouts/MainLayout.astro";
 
     <div class="divider my-2 sm:my-4">Top Artistas del Momento</div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" id="topArtistsGrid">
+    <div
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+      id="topArtistsGrid"
+    >
       <!-- Los artistas se cargarán dinámicamente -->
     </div>
 
@@ -87,84 +94,120 @@ import MainLayout from "../layouts/MainLayout.astro";
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
       <!-- Estadísticas de Popularidad -->
-      <div class="card bg-base-200">
-        <div class="card-body p-4 sm:p-6">
-          <h3 class="card-title text-base sm:text-lg">Promedio de Popularidad</h3>
-          <div class="flex items-center gap-3 sm:gap-4">
-            <div class="text-3xl sm:text-4xl font-bold text-primary" id="avgPopularity">-</div>
-            <p class="text-sm sm:text-base text-base-content/70">popularidad promedio de tus artistas</p>
-          </div>
-        </div>
-      </div>
+      <MiniCard2
+        title="Promedio de Popularidad"
+        description="popularidad promedio de tus artistas"
+        id="avgPopularity"
+      />
 
       <!-- Estadísticas de Seguidores -->
-      <div class="card bg-base-200">
-        <div class="card-body p-4 sm:p-6">
-          <h3 class="card-title text-base sm:text-lg">Total de Seguidores</h3>
-          <div class="flex items-center gap-3 sm:gap-4">
-            <div class="text-3xl sm:text-4xl font-bold text-primary" id="totalFollowers">-</div>
-            <p class="text-sm sm:text-base text-base-content/70">seguidores totales de tus artistas</p>
-          </div>
-        </div>
-      </div>
+      <MiniCard2
+        title="Total de Seguidores"
+        description="seguidores totales de tus artistas"
+        id="totalFollowers"
+      />
     </div>
   </div>
 
   <script>
-    import { getTopArtists, getTopGenres, getTopTracks, getAudioFeatures } from "../lib/spotify";
-    import { getAccesTokenCookie } from "../lib/utils";
+    await loadUniqueArtists();
+    await loadUniqueGenres();
 
-    async function loadStats() {
+    async function loadUniqueArtists() {
+      const uniqueArtistsElement = document.getElementById("uniqueArtists");
+
       try {
-        const token = await getAccesTokenCookie();
-        
-        // Obtener artistas y géneros
-        const [artists, genres, tracks] = await Promise.all([
-          getTopArtists(token, 'medium_term'),
-          getTopGenres(token, 'medium_term'),
-          getTopTracks(token, 'medium_term')
+        // Ejecutamos las 3 llamadas en paralelo
+        const [shortRes, mediumRes, longRes] = await Promise.all([
+          fetch("/api/spotify/topartists?time_range=short_term"),
+          fetch("/api/spotify/topartists?time_range=medium_term"),
+          fetch("/api/spotify/topartists?time_range=long_term"),
         ]);
 
+        // Convertimos todas al JSON también en paralelo
+        const [short, medium, long] = await Promise.all([
+          shortRes.json(),
+          mediumRes.json(),
+          longRes.json(),
+        ]);
 
-        const trackIds = tracks.map((track: any) => track.id);
+        // short, medium y long ya son arrays de artistas
+        const allArtists = [...short.items, ...medium.items, ...long.items];
 
+        // Sacamos los nombres únicos
+        const uniqueArtists = new Set(allArtists.map((a) => a.name)).size;
 
-        //const audioFeatures = getAudioFeatures(token, trackIds[0]);
-        // trackIds.forEach(async (trackId: string) => {
-        //   const audioFeatures = getAudioFeatures(token, trackId);
-        //   console.log(audioFeatures);
-        // });
+        if (uniqueArtistsElement) {
+          uniqueArtistsElement.textContent = uniqueArtists.toString();
+        }
 
+        await loadTopArtists(short.items);
 
-        // Actualizar estadísticas básicas
-        const uniqueArtists = new Set(artists.map((a: { name: string }) => a.name)).size;
-        const uniqueGenres = new Set(genres.map((g: { name: string }) => g.name)).size;
+        const avgPopularity =
+          allArtists.reduce(
+            (acc: number, artist: { popularity: number }) =>
+              acc + artist.popularity,
+            0
+          ) / allArtists.length;
+        const totalFollowers = allArtists.reduce(
+          (acc: number, artist: { followers: { total: number } }) =>
+            acc + artist.followers.total,
+          0
+        );
+        const popularityElement = document.getElementById("avgPopularity");
+        const followersElement = document.getElementById("totalFollowers");
+        if (popularityElement)
+          popularityElement.textContent = Math.round(avgPopularity).toString();
+        if (followersElement)
+          followersElement.textContent = totalFollowers.toLocaleString();
+      } catch (e) {
+        console.error("Error loading artists:", e);
+      }
+    }
 
-        const artistsElement = document.getElementById('uniqueArtists');
-        const genresElement = document.getElementById('uniqueGenres');
-        if (artistsElement) artistsElement.textContent = uniqueArtists.toString();
-        if (genresElement) genresElement.textContent = uniqueGenres.toString();
+    async function loadUniqueGenres() {
+      const uniqueGenresElement = document.getElementById("uniqueGenres");
 
-        // Calcular estadísticas detalladas
-        const avgPopularity = artists.reduce((acc: number, artist: { popularity: number }) => acc + artist.popularity, 0) / artists.length;
-        const totalFollowers = artists.reduce((acc: number, artist: { followers: { total: number } }) => acc + artist.followers.total, 0);
+      try {
+        // Ejecutamos las 3 llamadas en paralelo
+        const [shortRes, mediumRes, longRes] = await Promise.all([
+          fetch("/api/spotify/topgenres?time_range=short_term"),
+          fetch("/api/spotify/topgenres?time_range=medium_term"),
+          fetch("/api/spotify/topgenres?time_range=long_term"),
+        ]);
 
-        const popularityElement = document.getElementById('avgPopularity');
-        const followersElement = document.getElementById('totalFollowers');
-        if (popularityElement) popularityElement.textContent = Math.round(avgPopularity).toString();
-        if (followersElement) followersElement.textContent = totalFollowers.toLocaleString();
+        // Convertimos todas al JSON también en paralelo
+        const [short, medium, long] = await Promise.all([
+          shortRes.json(),
+          mediumRes.json(),
+          longRes.json(),
+        ]);
 
-        // Cargar top artistas
-        const topArtistsGrid = document.getElementById('topArtistsGrid');
+        const allGenres = [...short, ...medium, ...long];
+        const uniqueGenres = new Set(allGenres.map((g) => g.genre)).size;
+        if (uniqueGenresElement) {
+          uniqueGenresElement.textContent = uniqueGenres.toString();
+        }
+      } catch (e) {
+        console.error("Error loading genres:", e);
+      }
+    }
+
+    async function loadTopArtists(artists: any[]) {
+      const topArtistsGrid = document.getElementById("topArtistsGrid");
+      try {
         if (topArtistsGrid) {
-          topArtistsGrid.innerHTML = artists.slice(0, 6).map((artist: any, index: number) => `
+          topArtistsGrid.innerHTML = artists
+            .slice(0, 6)
+            .map(
+              (artist: any, index: number) => `
             <div class="card bg-base-200 hover:bg-base-300 transition-colors">
               <div class="card-body p-4 sm:p-6">
                 <div class="flex items-center gap-3 sm:gap-4">
                   <div class="text-xl sm:text-2xl font-bold text-primary">#${index + 1}</div>
                   <div>
                     <h3 class="font-bold text-sm sm:text-base">${artist.name}</h3>
-                    <p class="text-xs sm:text-sm text-base-content/70">${artist.genres.slice(0, 2).join(', ') || 'Sin géneros'}</p>
+                    <p class="text-xs sm:text-sm text-base-content/70">${artist.genres.slice(0, 2).join(", ") || "Sin géneros"}</p>
                   </div>
                 </div>
                 <div class="mt-2">
@@ -179,14 +222,13 @@ import MainLayout from "../layouts/MainLayout.astro";
                 </div>
               </div>
             </div>
-          `).join('');
+          `
+            )
+            .join("");
         }
-      } catch (error) {
-        console.error('Error al cargar estadísticas:', error);
+      } catch (e) {
+        console.error("Error loading top artists:", e);
       }
     }
-
-    // Cargar estadísticas al iniciar
-    loadStats();
   </script>
 </MainLayout>

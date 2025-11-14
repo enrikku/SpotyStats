@@ -103,13 +103,9 @@ import Loading from "../components/Loading.astro";
   </section>
 
   <script>
-    import { array } from "astro:schema";
-    import { getSong, getArtist } from "../lib/spotify";
-    import { getAccesTokenCookie } from "../lib/utils";
-
     let allData = [];
 
-    const input:any = document.getElementById("jsonInput") ;
+    const input: any = document.getElementById("jsonInput");
     const divDataNoLoaded = document.getElementById("divDataNoLoaded");
 
     input?.addEventListener("change", async () => {
@@ -211,7 +207,7 @@ import Loading from "../components/Loading.astro";
       const songsData = filtredOnlySongs(data);
       const divDataLoaded = document.getElementById("divDataLoaded");
       // Top 100 Artists
-      const token = await getAccesTokenCookie();
+      //const token = await getAccesTokenCookie();
       const top100Artists = getTop100Artists(songsData);
 
       processBasicInfo(songsData);
@@ -229,22 +225,26 @@ import Loading from "../components/Loading.astro";
         count++;
         var trackId = item.idTrack?.split(":")[2];
 
-        var token = await getAccesTokenCookie();
+        //var token = await getAccesTokenCookie();
 
-        var sonData = await getSong(token, trackId);
+        //var sonData = await getSong(token, trackId);
+        var sonData = await fetch(`/api/spotify/track?id=${trackId}`).then(
+          (res) => res.json()
+        );
         var artista = sonData.artists[0].uri.replace("spotify:artist:", "");
 
         // Pausa REAL y en SERIE
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        var artistData = await getArtist(token, artista);
+        //var artistData = await getArtist(token, artista);
+        var artistData = await fetch(`/api/spotify/artist?id=${artista}`).then(
+          (res) => res.json()
+        );
         var image = artistData.images[0]?.url || "";
 
         // Aquí el fix 👇
         item.artistImage = image;
-        console.log(`Processed ${count} of ${total} artists`);
       }
-      console.log("Top 100 with images:", top100);
 
       const container = document.getElementById("topArtistsContainer");
       const template = document.getElementById("topArtistTemplate");

@@ -5,17 +5,27 @@ import MainLayout from "../layouts/MainLayout.astro";
 <MainLayout content={{ title: "Top Genres" }}>
   <div class="flex flex-col gap-8 max-w-6xl mx-auto px-4 pb-10">
     <h1 class="text-4xl font-bold text-center">Top Géneros</h1>
-    
-    <div role="tablist" class="tabs tabs-lift justify-center text-base sm:text-lg" id="tabs">
+
+    <div
+      role="tablist"
+      class="tabs tabs-lift justify-center text-base sm:text-lg"
+      id="tabs"
+    >
       <p class="tab tab-active" data-range="short_term">Últimas 4 Semanas</p>
       <p class="tab" data-range="medium_term">Últimos 6 Meses</p>
       <p class="tab" data-range="long_term">Último Año</p>
     </div>
 
     <div class="w-full max-w-2xl mx-auto relative">
-      <div id="loading" class="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm rounded-lg hidden">
+      <div
+        id="loading"
+        class="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm rounded-lg hidden"
+      >
         <div class="flex flex-col items-center gap-3">
-          <div class="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+          <div
+            class="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"
+          >
+          </div>
           <p class="text-green-500 font-medium text-lg">Cargando...</p>
         </div>
       </div>
@@ -25,73 +35,92 @@ import MainLayout from "../layouts/MainLayout.astro";
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    import { getTopGenres } from "../lib/spotify";
-    import { getAccesTokenCookie } from "../lib/utils";
+    let currentChart: any = null;
+    const tabs = document.querySelectorAll(
+      ".tab"
+    ) as NodeListOf<HTMLAnchorElement>;
 
-    let currentChart = null;
-    const tabs = document.querySelectorAll(".tab") as NodeListOf<HTMLAnchorElement>;
+    async function initChart(timeRange = "medium_term") {
+      const loading = document.getElementById("loading");
 
-    async function initChart(timeRange = 'medium_term') {
-      const loading = document.getElementById('loading');
-      loading.classList.remove('hidden');
+      if (loading) loading.classList.remove("hidden");
 
       try {
-        const token = await getAccesTokenCookie();
-        const genres = await getTopGenres(token, timeRange);
-        
-        const genreLabels = genres.map(g => g.name);
-        const genreValues = genres.map(g => g.percentage);
-        
-        const ctx = document.getElementById('genresChart');
+        // const genres = await getTopGenres(token, timeRange);
+        const genres = await fetch(
+          "/api/spotify/topgenres?time_range=" + timeRange
+        ).then((res) => res.json());
+
+        console.log("Genres data:", genres);
+        const genreLabels = genres.map((g: any) => g.genre);
+        const genreValues = genres.map((g: any) => g.count);
+
+        // Convertir counts → porcentaje
+        const total = genreValues.reduce((a: any, b: any) => a + b, 0);
+        const percentages = genreValues.map((v: any) =>
+          ((v / total) * 100).toFixed(1)
+        );
+
+        const ctx = document.getElementById("genresChart");
 
         if (currentChart) {
           currentChart.destroy();
         }
-        
+
         currentChart = new Chart(ctx, {
-          type: 'pie',
+          type: "pie",
           data: {
             labels: genreLabels,
-            datasets: [{
-              data: genreValues,
-              backgroundColor: [
-                '#1DB954', // Verde Spotify
-                '#FF6B6B', // Coral
-                '#4ECDC4', // Turquesa
-                '#FFD93D', // Amarillo
-                '#6C5CE7', // Púrpura
-                '#A8E6CF', // Menta
-                '#FF8B94', // Rosa
-                '#45B7D1', // Azul
-                '#FDAC53', // Naranja
-                '#98DDCA'  // Verde agua
-              ]
-            }]
+            datasets: [
+              {
+                data: percentages,
+                backgroundColor: [
+                  "#1DB954",
+                  "#FF6B6B",
+                  "#4ECDC4",
+                  "#FFD93D",
+                  "#6C5CE7",
+                  "#A8E6CF",
+                  "#FF8B94",
+                  "#45B7D1",
+                  "#FDAC53",
+                  "#98DDCA",
+                  "#B33771",
+                  "#3B3B98",
+                  "#00a8ff",
+                  "#9c88ff",
+                  "#fbc531",
+                  "#e84118",
+                  "#4cd137",
+                  "#487eb0",
+                  "#8c7ae6",
+                  "#273c75",
+                ].slice(0, genreLabels.length), // Evita error si hay más géneros que colores
+              },
+            ],
           },
           options: {
             responsive: true,
             plugins: {
               legend: {
-                position: 'bottom',
+                position: "bottom",
                 labels: {
-                  color: '#fff',
-                  font: {
-                    size: 14 // Aumentado de 12 a 14
-                  }
-                }
+                  color: "#fff",
+                  font: { size: 14 },
+                },
               },
               tooltip: {
                 callbacks: {
-                  label: function(context) {
+                  label: function (context: any) {
                     return `${context.label}: ${context.raw}%`;
-                  }
-                }
-              }
-            }
-          }
+                  },
+                },
+              },
+            },
+          },
         });
       } finally {
-        loading.classList.add('hidden');
+        if (loading) loading.classList.add("hidden");
       }
     }
 
