@@ -213,18 +213,13 @@
     }
 
     function updateProgressSmooth() {
-      if (!isPlaying) {
-        progressBar.style.width = "0%";
-        return;
-      }
+      if (!isPlaying) return;
 
       const now = Date.now();
       const elapsed = now - lastUpdateTimestamp;
-
       const newProgress = lastProgress + elapsed;
 
       const pct = Math.min((newProgress / lastDuration) * 100, 100);
-
       progressBar.style.width = pct + "%";
 
       requestAnimationFrame(updateProgressSmooth);
@@ -233,25 +228,26 @@
     async function updateNowPlaying() {
       const playing = await fetchNowPlaying();
 
-      //console.log("Now Playing:", playing);
-      if (!playing || !playing.is_playing) {
-        //if (player) player.style.display = "none";
-
-        imgPlay.classList.remove("hidden");
-        imgPause.classList.add("hidden");
-        progressBar.style.width = "0%";
-
-        isPlaying = false;
+      if (!playing || !playing.item) {
+        if (player) player.style.display = "none";
         return;
       }
 
+      // Guardar tiempos
       lastProgress = playing.progress_ms ?? 0;
       lastDuration = playing.item.duration_ms ?? 1;
       lastUpdateTimestamp = Date.now();
-      await updateProgressSmooth();
-      isPlaying = true;
+      isPlaying = playing.is_playing;
+
+      // ⚡ 1) Mostrar el % INMEDIATAMENTE sin esperar animación
+      const initialPct = Math.min((lastProgress / lastDuration) * 100, 100);
+      progressBar.style.width = initialPct + "%";
+
+      // ⚡ 2) Empezar la animación suave desde ahí
+      requestAnimationFrame(updateProgressSmooth);
 
       if (player) player.style.display = "flex";
+
       if (title) {
         title.innerHTML = "";
         const titleLink = document.createElement("a");
@@ -261,16 +257,15 @@
         titleLink.target = "_blank";
         title.appendChild(titleLink);
       }
+
       if (artist) {
         artist.innerHTML = "";
-
         playing.item.artists.forEach((art, i) => {
           const link = document.createElement("a");
           link.href = art.external_urls.spotify;
           link.textContent = art.name;
           link.target = "_blank";
           link.className = "hover:text-primary truncate";
-
           artist.appendChild(link);
 
           if (i < playing.item.artists.length - 1) {
@@ -293,7 +288,6 @@
     async function sendPlayerCommand(endpoint: string) {
       try {
         await fetch(`/api/spotify/player/${endpoint}`, { method: "POST" });
-
         setTimeout(() => updateNowPlaying(), 600);
       } catch {
         console.error("Player command failed:", endpoint);
@@ -305,7 +299,6 @@
     btnPlay?.addEventListener("click", () => sendPlayerCommand("playpause"));
 
     await updateNowPlaying();
-
     setInterval(updateNowPlaying, 5000);
   });
 </script>

@@ -9,24 +9,54 @@ export const GET: APIRoute = async ({ request }) => {
 
   if (error) return new Response("NO_AUTH", { status: 401 });
 
-  const data = await fetch(
+  const resSpotify = await fetch(
     "https://api.spotify.com/v1/me/player/currently-playing",
     {
       headers: { Authorization: `Bearer ${accessToken}` }
     }
-  ).then((r) => r.json());
+  );
 
-  const res = new Response(JSON.stringify(data), {
-    headers: { "Content-Type": "application/json" },
+  // ---- ⚠️ SI NO HAY NADA SONANDO → 204 ----
+  if (resSpotify.status === 204) {
+    return new Response(JSON.stringify({ playing: false }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+
+  // ---- ⚠️ Si no hay body ----
+  const text = await resSpotify.text();
+  if (!text) {
+    return new Response(JSON.stringify({ playing: false }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+
+  // ---- Parsear seguro ----
+  let data: any;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    data = null;
+  }
+
+  // ---- Si Spotify devuelve error interno ----
+  if (!data || data.error) {
+    return new Response(JSON.stringify({ playing: false }), {
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+
+  // ---- Respuesta final ----
+  const response = new Response(JSON.stringify(data), {
+    headers: { "Content-Type": "application/json" }
   });
 
-  // Si hubo refresh, actualiza cookies
-
+  // ---- Refrescar cookies si toca ----
   if (setCookies) {
     for (const c of setCookies) {
-      res.headers.append("Set-Cookie", c);
+      response.headers.append("Set-Cookie", c);
     }
   }
 
-  return res;
+  return response;
 };
