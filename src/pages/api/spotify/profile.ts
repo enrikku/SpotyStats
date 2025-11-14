@@ -1,6 +1,7 @@
+export const runtime = "node";
+
 import type { APIRoute } from "astro";
 import { spotifyRequest } from "../../../utils/spotifyApi";
-import { getSession, refreshAccessToken } from "../../../utils/spotifySession";
 
 export const GET: APIRoute = async ({ request }) => {
     console.log("Handling Spotify profile request");

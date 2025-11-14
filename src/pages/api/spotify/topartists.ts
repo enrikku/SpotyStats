@@ -1,3 +1,4 @@
+export const runtime = "node";
 
 
 import type { APIRoute } from "astro";

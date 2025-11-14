@@ -1,5 +1,6 @@
 import type { APIRoute } from "astro";
 import { createSession } from "../../../utils/spotifySession";
+export const runtime = "node";
 
 export const GET: APIRoute = async ({ request }) => {
   const url = new URL(request.url);

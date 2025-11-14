@@ -1,4 +1,6 @@
 // src/pages/api/spotify/create-playlist.ts
+export const runtime = "node";
+
 import type { APIRoute } from "astro";
 import { spotifyRequest } from "../../../utils/spotifyApi";
 
