@@ -1,31 +1,45 @@
+// src/pages/api/spotify/artist.ts
 export const runtime = "node";
 
 import type { APIRoute } from "astro";
-import { spotifyRequest } from "../../../utils/spotifyApi";
+import { getValidSpotifyToken } from "../../../utils/spotifyAuth";
 
 export const GET: APIRoute = async ({ request }) => {
-    const cookie = request.headers.get("cookie");
-    const sessionId = cookie?.match(/sessionId=([^;]+)/)?.[1];
+  // Obtener token válido (renueva automáticamente si está caducado)
+  const { accessToken, setCookies, error } = await getValidSpotifyToken(request);
 
-    if (!sessionId) {
-        return new Response("No session", { status: 401 });
+  if (error) {
+    return new Response("NO_AUTH", { status: 401 });
+  }
+
+  // Obtener parámetro ?id=xxxx
+  const url = new URL(request.url);
+  const artistId = url.searchParams.get("id");
+
+  if (!artistId) {
+    return new Response("Missing artist id", { status: 400 });
+  }
+
+  // Llamada directa a Spotify
+  const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`
     }
+  });
 
-    // Obtener el parámetro ?id=xxxx
-    const url = new URL(request.url);
-    const artistId = url.searchParams.get("id");
+  const data = await res.json();
 
-    if (!artistId) {
-        return new Response("Missing artist id", { status: 400 });
+  // Preparar respuesta
+  const response = new Response(JSON.stringify(data), {
+    headers: { "Content-Type": "application/json" }
+  });
+
+  // Si hay cookies nuevas (token refrescado), añadirlas
+  if (setCookies) {
+    for (const c of setCookies) {
+      response.headers.append("Set-Cookie", c);
     }
+  }
 
-    // Llamar al endpoint de Spotify
-    const data = await spotifyRequest(
-        sessionId,
-        `https://api.spotify.com/v1/artists/${artistId}`
-    );
-
-    return new Response(JSON.stringify(data), {
-        headers: { "Content-Type": "application/json" }
-    });
+  return response;
 };

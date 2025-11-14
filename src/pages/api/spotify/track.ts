@@ -1,17 +1,17 @@
 export const runtime = "node";
 
 import type { APIRoute } from "astro";
-import { spotifyRequest } from "../../../utils/spotifyApi";
+import { getValidSpotifyToken } from "../../../utils/spotifyAuth";
 
 export const GET: APIRoute = async ({ request }) => {
-    const cookie = request.headers.get("cookie");
-    const sessionId = cookie?.match(/sessionId=([^;]+)/)?.[1];
+    // Obtener token válido (refresca si hace falta)
+    const { accessToken, setCookies, error } = await getValidSpotifyToken(request);
 
-    if (!sessionId) {
-        return new Response("No session", { status: 401 });
+    if (error) {
+        return new Response("NO_AUTH", { status: 401 });
     }
 
-    // Obtener query param ?id=xxxx
+    // Obtener el parámetro id
     const url = new URL(request.url);
     const trackId = url.searchParams.get("id");
 
@@ -20,12 +20,25 @@ export const GET: APIRoute = async ({ request }) => {
     }
 
     // Llamada a Spotify
-    const data = await spotifyRequest(
-        sessionId,
-        `https://api.spotify.com/v1/tracks/${trackId}`
-    );
-
-    return new Response(JSON.stringify(data), {
-        headers: { "Content-Type": "application/json" },
+    const res = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`
+        }
     });
+
+    const data = await res.json();
+
+    // Response
+    const response = new Response(JSON.stringify(data), {
+        headers: { "Content-Type": "application/json" }
+    });
+
+    // Añadir nuevas cookies si hubo refresh
+    if (setCookies) {
+        for (const c of setCookies) {
+            response.headers.append("Set-Cookie", c);
+        }
+    }
+
+    return response;
 };

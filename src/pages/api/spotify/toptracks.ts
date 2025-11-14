@@ -1,70 +1,68 @@
-// export const runtime = "node";
-
-// import type { APIRoute } from "astro";
-// import { spotifyRequest } from "../../../utils/spotifyApi";
-
-// export const GET: APIRoute = async ({ request }) => {
-//     const cookie = request.headers.get("cookie");    
-//     const sessionId = cookie?.match(/sessionId=([^;]+)/)?.[1];
-
-//     if (!sessionId) {
-//         return new Response("No session", { status: 401 });
-//     }
-//     const url = new URL(request.url);
-//     const timeRange = url.searchParams.get("time_range") ?? "medium_term";
-
-//     const data = await spotifyRequest(
-//         sessionId,
-//          `https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=${timeRange}`, 
-//     );
-
-//     return new Response(JSON.stringify(data), {
-//         headers: { "Content-Type": "application/json" }
-//     });
-// };
-
 export const runtime = "node";
 
 import type { APIRoute } from "astro";
-import { spotifyRequest } from "../../../utils/spotifyApi";
+import { getValidSpotifyToken } from "../../../utils/spotifyAuth";
 import { getCache, setCache } from "../../../utils/cache";
 
 export const GET: APIRoute = async ({ request }) => {
-    const cookie = request.headers.get("cookie");
-    const sessionId = cookie?.match(/sessionId=([^;]+)/)?.[1];
+  const { accessToken, setCookies, error } = await getValidSpotifyToken(request);
 
-    if (!sessionId) {
-        return new Response("No session", { status: 401 });
-    }
+  if (error) {
+    return new Response("NO_AUTH", { status: 401 });
+  }
 
-    const url = new URL(request.url);
-    const timeRange = url.searchParams.get("time_range") ?? "medium_term";
+  const url = new URL(request.url);
+  const timeRange = url.searchParams.get("time_range") ?? "medium_term";
 
-    // --------------------------------------
-    // 🔥 CACHE KEY única por usuario y rango
-    // --------------------------------------
-    const cacheKey = `toptracks:${sessionId}:${timeRange}`;
-    const cached = getCache(cacheKey);
+  // --------------------------------------
+  // 🔥 Cache Key
+  // --------------------------------------
+  const cacheKey = `toptracks:${accessToken}:${timeRange}`;
+  const cached = getCache(cacheKey);
 
-    if (cached) {
-        console.log("Serving top tracks from cache for key:", cacheKey);
-        return new Response(JSON.stringify(cached), {
-            headers: { "Content-Type": "application/json", "X-Cache": "HIT" }
-        });
-    }
+  if (cached) {
+    console.log("Serving top tracks from cache:", cacheKey);
 
-    // --------------------------------------
-    // ❌ No está en caché → pedir a Spotify
-    // --------------------------------------
-    const data = await spotifyRequest(
-        sessionId,
-        `https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=${timeRange}`
-    );
-
-    // Guardamos cache 60 segundos
-    setCache(cacheKey, data, 86400);
-
-    return new Response(JSON.stringify(data), {
-        headers: { "Content-Type": "application/json", "X-Cache": "MISS" }
+    const res = new Response(JSON.stringify(cached), {
+      headers: { "Content-Type": "application/json", "X-Cache": "HIT" }
     });
+
+    // reenviar cookies si hubo refresh
+    if (setCookies) {
+    for (const c of setCookies) {
+      res.headers.append("Set-Cookie", c);
+    }
+  }
+
+    return res;
+  }
+
+  // --------------------------------------
+  // ❌ No está en caché → pedir a Spotify
+  // --------------------------------------
+  const spotifyRes = await fetch(
+    `https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=${timeRange}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    }
+  );
+
+  const data = await spotifyRes.json();
+
+  // Guardar en cache 24h
+  setCache(cacheKey, data, 86400);
+
+  const res = new Response(JSON.stringify(data), {
+    headers: { "Content-Type": "application/json", "X-Cache": "MISS" }
+  });
+
+  // reenviar cookies si hubo refresh
+  if (setCookies) {
+    for (const c of setCookies) {
+      res.headers.append("Set-Cookie", c);
+    }
+  }
+  return res;
 };

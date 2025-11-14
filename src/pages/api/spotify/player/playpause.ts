@@ -1,38 +1,59 @@
 // src/pages/api/spotify/player/playpause.ts
 export const runtime = "node";
 
-
 import type { APIRoute } from "astro";
-import { spotifyRequest } from "../../../../utils/spotifyApi";
+import { getValidSpotifyToken } from "../../../../utils/spotifyAuth";
 
 export const POST: APIRoute = async ({ request }) => {
-    const cookie = request.headers.get("cookie");
-    const sessionId = cookie?.match(/sessionId=([^;]+)/)?.[1];
+    // Obtener token válido (auto-refresh si está expirado)
+    const { accessToken, setCookies, error } = await getValidSpotifyToken(request);
 
-    console.log("Session ID:", sessionId);
-    if (!sessionId) return new Response("No session", { status: 401 });
+    if (error) {
+        return new Response("NO_AUTH", { status: 401 });
+    }
 
-    // Primero obtenemos el estado actual del player
-    const player = await spotifyRequest(
-        sessionId,
-        "https://api.spotify.com/v1/me/player"
-    );
+    // Obtener estado actual del player
+    const playerRes = await fetch("https://api.spotify.com/v1/me/player", {
+        headers: {
+            Authorization: `Bearer ${accessToken}`
+        }
+    });
 
-    if (!player) {
+    if (playerRes.status === 204) {
         return new Response(JSON.stringify({ error: "No active device" }), {
             status: 400
         });
     }
 
-    const isPlaying = player.is_playing;
+    const player = await playerRes.json();
+    const isPlaying = player?.is_playing;
 
     const endpoint = isPlaying
         ? "https://api.spotify.com/v1/me/player/pause"
         : "https://api.spotify.com/v1/me/player/play";
 
-    const res = await spotifyRequest(sessionId, endpoint, { method: "PUT" });
-
-    return new Response(JSON.stringify({ ok: true, playing: !isPlaying }), {
-        headers: { "Content-Type": "application/json" }
+    // Enviar comando PLAY o PAUSE
+    await fetch(endpoint, {
+        method: "PUT",
+        headers: {
+            Authorization: `Bearer ${accessToken}`
+        }
     });
+
+    // Preparar respuesta final
+    const response = new Response(
+        JSON.stringify({ ok: true, playing: !isPlaying }),
+        {
+            headers: { "Content-Type": "application/json" }
+        }
+    );
+
+    // Añadir cookies si fueron regeneradas
+    if (setCookies) {
+        for (const c of setCookies) {
+            response.headers.append("Set-Cookie", c);
+        }
+    }
+
+    return response;
 };

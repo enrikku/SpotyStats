@@ -1,65 +1,65 @@
-// export const runtime = "node";
-
-// import type { APIRoute } from "astro";
-// import { spotifyRequest } from "../../../utils/spotifyApi";
-
-// export const GET: APIRoute = async ({ request }) => {
-//     console.log("Handling Spotify profile request");
-//     const cookie = request.headers.get("cookie");    
-//     const sessionId = cookie?.match(/sessionId=([^;]+)/)?.[1];
-
-//     if (!sessionId) {
-//         return new Response("No session", { status: 401 });
-//     }
-
-//     const data = await spotifyRequest(
-//         sessionId,
-//         "https://api.spotify.com/v1/me"
-//     );
-
-//     return new Response(JSON.stringify(data), {
-//         headers: { "Content-Type": "application/json" }
-//     });
-// };
-
 export const runtime = "node";
 
 import type { APIRoute } from "astro";
-import { spotifyRequest } from "../../../utils/spotifyApi";
+import { getValidSpotifyToken } from "../../../utils/spotifyAuth";
 import { getCache, setCache } from "../../../utils/cache";
 
 export const GET: APIRoute = async ({ request }) => {
     console.log("Handling Spotify profile request");
 
-    const cookie = request.headers.get("cookie");
-    const sessionId = cookie?.match(/sessionId=([^;]+)/)?.[1];
+    // Obtener token válido (refresca si hace falta)
+    const { accessToken, setCookies, error } = await getValidSpotifyToken(request);
 
-    if (!sessionId) {
-        return new Response("No session", { status: 401 });
+    if (error) {
+        return new Response("NO_AUTH", { status: 401 });
     }
 
     // --------------------------------------
     // 🔥 Clave de caché
     // --------------------------------------
-    const cacheKey = `profile:${sessionId}`;
-    const cached = getCache(cacheKey);
+    const cacheKey = `profile:${accessToken}`;
 
+    const cached = getCache(cacheKey);
     if (cached) {
-        console.log("Serving profile from cache for key:", cacheKey);
-        return new Response(JSON.stringify(cached), {
+        console.log("Serving profile from cache:", cacheKey);
+
+        const res = new Response(JSON.stringify(cached), {
             headers: { "Content-Type": "application/json", "X-Cache": "HIT" }
         });
+
+        // Si el token se refrescó → enviar nuevas cookies
+        if (setCookies) {
+            for (const c of setCookies) {
+                res.headers.append("Set-Cookie", c);
+            }
+        }
+        return res;
     }
 
     // --------------------------------------
     // ❌ No hay caché → pedir a Spotify
     // --------------------------------------
-    const data = await spotifyRequest(sessionId, "https://api.spotify.com/v1/me");
+    const spotifyRes = await fetch("https://api.spotify.com/v1/me", {
+        headers: {
+            Authorization: `Bearer ${accessToken}`
+        }
+    });
 
-    // Guardar en caché 5 minutos
-    setCache(cacheKey, data, 86400 );
+    const data = await spotifyRes.json();
 
-    return new Response(JSON.stringify(data), {
+    // Guardar en caché → 24h como pediste
+    setCache(cacheKey, data, 86400);
+
+    const res = new Response(JSON.stringify(data), {
         headers: { "Content-Type": "application/json", "X-Cache": "MISS" }
     });
+
+    // Enviar nuevas cookies si hubo refresh
+    if (setCookies) {
+        for (const c of setCookies) {
+            res.headers.append("Set-Cookie", c);
+        }
+    }
+
+    return res;
 };

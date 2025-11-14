@@ -1,19 +1,32 @@
+// src/pages/api/spotify/player/now-playing.ts
+import type { APIRoute } from "astro";
+import { getValidSpotifyToken } from "../../../../utils/spotifyAuth";
+
 export const runtime = "node";
 
-import type { APIRoute } from "astro";
-import { spotifyRequest } from "../../../../utils/spotifyApi";
-
 export const GET: APIRoute = async ({ request }) => {
-  const sessionId = request.headers.get("cookie")?.match(/sessionId=([^;]+)/)?.[1];
-  if (!sessionId) return new Response("No session", { status: 401 });
+  const { accessToken, setCookies, error } = await getValidSpotifyToken(request);
 
-  const data = await spotifyRequest(sessionId, "https://api.spotify.com/v1/me/player/currently-playing");
+  if (error) return new Response("NO_AUTH", { status: 401 });
 
-  if (!data || data?.error) {
-    return new Response(JSON.stringify({ playing: false }));
+  const data = await fetch(
+    "https://api.spotify.com/v1/me/player/currently-playing",
+    {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    }
+  ).then((r) => r.json());
+
+  const res = new Response(JSON.stringify(data), {
+    headers: { "Content-Type": "application/json" },
+  });
+
+  // Si hubo refresh, actualiza cookies
+
+  if (setCookies) {
+    for (const c of setCookies) {
+      res.headers.append("Set-Cookie", c);
+    }
   }
 
-  return new Response(JSON.stringify(data), {
-    headers: { "Content-Type": "application/json" }
-  });
+  return res;
 };

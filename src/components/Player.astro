@@ -43,23 +43,25 @@
 </div>
 
 <style>
-    @media (max-width: 639px) {
-        #player {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 50;
-            max-width: 100%;
-            border-radius: 0;
-            display: flex !important;
-        }
+  @media (max-width: 639px) {
+    #player {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      max-width: 100%;
+      border-radius: 0;
+      display: flex !important;
     }
+  }
 </style>
 
 <!-- End Player -->
 
 <script>
+  import { getCookieValue } from "../utils/utils";
+
   interface NowPlayingResponse {
     device: Device;
     repeat_state: string;
@@ -198,6 +200,8 @@
     let lastDuration = 1;
     let lastUpdateTimestamp = 0;
 
+    const token = getCookieValue(null, "accessToken");
+
     async function fetchNowPlaying(): Promise<NowPlayingResponse | null> {
       try {
         const res = await fetch("/api/spotify/player/now-playing");
@@ -229,7 +233,7 @@
     async function updateNowPlaying() {
       const playing = await fetchNowPlaying();
 
-      console.log("Now Playing:", playing);
+      //console.log("Now Playing:", playing);
       if (!playing || !playing.is_playing) {
         //if (player) player.style.display = "none";
 

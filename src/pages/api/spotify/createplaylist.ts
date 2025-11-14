@@ -2,44 +2,41 @@
 export const runtime = "node";
 
 import type { APIRoute } from "astro";
-import { spotifyRequest } from "../../../utils/spotifyApi";
+import { getValidSpotifyToken } from "../../../utils/spotifyAuth";
 
 export const POST: APIRoute = async ({ request }) => {
-    // Leer cookie
-    const cookie = request.headers.get("cookie");
-    const sessionId = cookie?.match(/sessionId=([^;]+)/)?.[1];
+    // Obtener token válido (refresh si caducó)
+    const { accessToken, setCookies, error } = await getValidSpotifyToken(request);
 
-    if (!sessionId) {
-        return new Response("No session", { status: 401 });
+    if (error) {
+        return new Response("NO_AUTH", { status: 401 });
     }
 
-    // Leer el body del JSON
+    // Leer body
     const body = await request.json();
     const name = body.name ?? "Nueva Playlist";
     const description = body.description ?? "";
     const isPublic = body.public ?? false;
-    //const trackUris: string[] = body.trackUris ?? [];
 
-    //console.log("Creating playlist with:", { name, description, isPublic, trackUris });
-
-    // Obtener el perfil del usuario para saber su userId
-    const profile = await spotifyRequest(
-        sessionId,
-        "https://api.spotify.com/v1/me"
-    );
+    // 1️⃣ Obtener perfil para userId
+    const profileRes = await fetch("https://api.spotify.com/v1/me", {
+        headers: { Authorization: `Bearer ${accessToken}` }
+    });
+    const profile = await profileRes.json();
 
     if (!profile?.id) {
         return new Response("User ID not found", { status: 500 });
     }
 
-    const userId = profile.id;
-
-    // Crear playlist
-    const createRes = await spotifyRequest(
-        sessionId,
-        `https://api.spotify.com/v1/users/${userId}/playlists`,
+    // 2️⃣ Crear playlist
+    const createRes = await fetch(
+        `https://api.spotify.com/v1/users/${profile.id}/playlists`,
         {
             method: "POST",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({
                 name,
                 description,
@@ -48,7 +45,18 @@ export const POST: APIRoute = async ({ request }) => {
         }
     );
 
-    return new Response(JSON.stringify(createRes), {
+    const created = await createRes.json();
+
+    // 3️⃣ Preparar respuesta + cookies (si hay refresh)
+    const response = new Response(JSON.stringify(created), {
         headers: { "Content-Type": "application/json" }
     });
+
+    if (setCookies) {
+        for (const c of setCookies) {
+            response.headers.append("Set-Cookie", c);
+        }
+    }
+
+    return response;
 };

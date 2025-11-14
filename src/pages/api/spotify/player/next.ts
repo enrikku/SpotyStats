@@ -2,21 +2,35 @@
 export const runtime = "node";
 
 import type { APIRoute } from "astro";
-import { spotifyRequest } from "../../../../utils/spotifyApi";
+import { getValidSpotifyToken } from "../../../../utils/spotifyAuth";
 
 export const POST: APIRoute = async ({ request }) => {
-  const cookie = request.headers.get("cookie");
-  const sessionId = cookie?.match(/sessionId=([^;]+)/)?.[1];
+  // Obtener token válido (auto-refresh si expira)
+  const { accessToken, setCookies, error } = await getValidSpotifyToken(request);
 
-  if (!sessionId) return new Response("No session", { status: 401 });
+  if (error) {
+    return new Response("NO_AUTH", { status: 401 });
+  }
 
-  await spotifyRequest(
-    sessionId,
-    "https://api.spotify.com/v1/me/player/next",
-    { method: "POST" }
-  );
+  // Llamar al endpoint NEXT de Spotify
+  await fetch("https://api.spotify.com/v1/me/player/next", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
+  });
 
-  return new Response(JSON.stringify({ ok: true }), {
+  // Preparar respuesta
+  const response = new Response(JSON.stringify({ ok: true }), {
     headers: { "Content-Type": "application/json" }
   });
+
+  // Incluir cookies nuevas si el token fue refrescado
+  if (setCookies) {
+    for (const c of setCookies) {
+      response.headers.append("Set-Cookie", c);
+    }
+  }
+
+  return response;
 };
