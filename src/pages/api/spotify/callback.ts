@@ -84,6 +84,10 @@ export const GET: APIRoute = async ({ request }) => {
     expiresIn: json.expires_in
   });
 
+  const host = request.headers.get("host") || "";
+  const isProd = host.includes("spotystats.es");
+
+  const cookieDomain = isProd ? "Domain=www.spotystats.es;" : "";
   // Guardar cookie con dominio explícito
   return new Response(null, {
     status: 302,
@@ -95,9 +99,10 @@ export const GET: APIRoute = async ({ request }) => {
         "HttpOnly",
         "Secure",
         "SameSite=Lax",
-        "Domain=www.spotystats.es", // ← ★ IMPORTANTE ★
+        cookieDomain,        // ← dinámico (vacío o con dominio)
         "Max-Age=2592000"
       ].join("; ")
     }
   });
+
 };
