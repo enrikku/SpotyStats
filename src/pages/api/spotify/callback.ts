@@ -33,10 +33,17 @@ export const GET: APIRoute = async ({ request }) => {
 
   // Guardar cookie segura y volver a la página principal
   return new Response(null, {
-    status: 302,
-    headers: {
-      "Set-Cookie": `sessionId=${sessionId}; Path=/; HttpOnly; Secure; SameSite=Lax`,
-      Location: "/home"
-    }
-  });
+  status: 302,
+  headers: {
+    Location: "/home",
+    "Set-Cookie": `sessionId=${sessionId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`
+  }
+});
+  // return new Response(null, {
+  //   status: 302,
+  //   headers: {
+  //     "Set-Cookie": `sessionId=${sessionId}; Path=/; HttpOnly; Secure; SameSite=Lax`,
+  //     Location: "/home"
+  //   }
+  // });
 };
