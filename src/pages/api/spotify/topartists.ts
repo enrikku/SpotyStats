@@ -22,7 +22,7 @@ export const GET: APIRoute = async ({ request }) => {
   const cached = getCache(cacheKey);
   if (cached) {
     const res = new Response(JSON.stringify(cached), {
-      headers: { "Content-Type": "application/json", "X-Cache": "HIT" }
+      headers: { "Content-Type": "application/json", "X-Cache": "HIT" },
     });
 
     // Si hubo refresh enviar nuevas cookies
@@ -36,14 +36,11 @@ export const GET: APIRoute = async ({ request }) => {
   }
 
   // ---- ❌ No está en caché → pedir a Spotify ----
-  const spotifyRes = await fetch(
-    `https://api.spotify.com/v1/me/top/artists?limit=50&time_range=${timeRange}`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`
-      }
-    }
-  );
+  const spotifyRes = await fetch(`https://api.spotify.com/v1/me/top/artists?limit=50&time_range=${timeRange}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 
   const data = await spotifyRes.json();
 
@@ -51,7 +48,7 @@ export const GET: APIRoute = async ({ request }) => {
   setCache(cacheKey, data, 86400);
 
   const res = new Response(JSON.stringify(data), {
-    headers: { "Content-Type": "application/json", "X-Cache": "MISS" }
+    headers: { "Content-Type": "application/json", "X-Cache": "MISS" },
   });
 
   // Enviar cookies si el token se refrescó

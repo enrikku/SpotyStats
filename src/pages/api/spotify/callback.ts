@@ -67,8 +67,8 @@ export const GET: APIRoute = async ({ request }) => {
       code,
       redirect_uri: import.meta.env.SPOTIFY_REDIRECT_URI,
       client_id: import.meta.env.SPOTIFY_CLIENT_ID,
-      client_secret: import.meta.env.SPOTIFY_CLIENT_SECRET
-    })
+      client_secret: import.meta.env.SPOTIFY_CLIENT_SECRET,
+    }),
   });
 
   const json = await res.json();
@@ -85,7 +85,7 @@ export const GET: APIRoute = async ({ request }) => {
   // Creamos la respuesta vacía
   const response = new Response(null, {
     status: 302,
-    headers: { Location: "/home" }
+    headers: { Location: "/home" },
   });
 
   // Añadimos cookies UNA A UNA

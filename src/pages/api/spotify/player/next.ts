@@ -16,13 +16,13 @@ export const POST: APIRoute = async ({ request }) => {
   await fetch("https://api.spotify.com/v1/me/player/next", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${accessToken}`
-    }
+      Authorization: `Bearer ${accessToken}`,
+    },
   });
 
   // Preparar respuesta
   const response = new Response(JSON.stringify({ ok: true }), {
-    headers: { "Content-Type": "application/json" }
+    headers: { "Content-Type": "application/json" },
   });
 
   // Incluir cookies nuevas si el token fue refrescado

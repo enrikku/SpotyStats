@@ -23,8 +23,8 @@ export async function getValidSpotifyToken(request: Request) {
       grant_type: "refresh_token",
       refresh_token: refreshToken,
       client_id: import.meta.env.SPOTIFY_CLIENT_ID,
-      client_secret: import.meta.env.SPOTIFY_CLIENT_SECRET
-    })
+      client_secret: import.meta.env.SPOTIFY_CLIENT_SECRET,
+    }),
   });
 
   const json = await res.json();
@@ -38,10 +38,7 @@ export async function getValidSpotifyToken(request: Request) {
 
   const baseFlags = `Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`;
 
-  const setCookies = [
-    `accessToken=${newAccessToken}; ${baseFlags}`,
-    `expiresAt=${newExpiresAt}; ${baseFlags}`
-  ];
+  const setCookies = [`accessToken=${newAccessToken}; ${baseFlags}`, `expiresAt=${newExpiresAt}; ${baseFlags}`];
 
   return { accessToken: newAccessToken, setCookies };
 }

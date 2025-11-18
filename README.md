@@ -20,17 +20,20 @@ SpotyStats es una aplicación web moderna construida con Astro que te permite vi
 ## 🏗️ Instalación
 
 1. Clona el repositorio:
+
 ```bash
 git clone https://github.com/tu-usuario/spotystats.git
 cd spotystats
 ```
 
 2. Instala las dependencias:
+
 ```bash
 npm install
 ```
 
 3. Inicia el servidor de desarrollo:
+
 ```bash
 npm run dev
 ```
@@ -48,6 +51,7 @@ La aplicación está configurada para desplegarse automáticamente en Vercel. Ca
 ## 📊 Análisis
 
 La aplicación incluye:
+
 - Vercel Analytics para seguimiento de usuarios
 - Vercel Speed Insights para monitoreo de rendimiento
 

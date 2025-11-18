@@ -23,15 +23,15 @@ export const GET: APIRoute = async ({ request }) => {
   // Llamada directa a Spotify
   const res = await fetch(`https://api.spotify.com/v1/artists/${artistId}`, {
     headers: {
-      Authorization: `Bearer ${accessToken}`
-    }
+      Authorization: `Bearer ${accessToken}`,
+    },
   });
 
   const data = await res.json();
 
   // Preparar respuesta
   const response = new Response(JSON.stringify(data), {
-    headers: { "Content-Type": "application/json" }
+    headers: { "Content-Type": "application/json" },
   });
 
   // Si hay cookies nuevas (token refrescado), añadirlas

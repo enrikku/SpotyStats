@@ -24,15 +24,15 @@ export const GET: APIRoute = async ({ request }) => {
     console.log("Serving top tracks from cache:", cacheKey);
 
     const res = new Response(JSON.stringify(cached), {
-      headers: { "Content-Type": "application/json", "X-Cache": "HIT" }
+      headers: { "Content-Type": "application/json", "X-Cache": "HIT" },
     });
 
     // reenviar cookies si hubo refresh
     if (setCookies) {
-    for (const c of setCookies) {
-      res.headers.append("Set-Cookie", c);
+      for (const c of setCookies) {
+        res.headers.append("Set-Cookie", c);
+      }
     }
-  }
 
     return res;
   }
@@ -40,14 +40,11 @@ export const GET: APIRoute = async ({ request }) => {
   // --------------------------------------
   // ❌ No está en caché → pedir a Spotify
   // --------------------------------------
-  const spotifyRes = await fetch(
-    `https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=${timeRange}`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`
-      }
-    }
-  );
+  const spotifyRes = await fetch(`https://api.spotify.com/v1/me/top/tracks?limit=50&time_range=${timeRange}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 
   const data = await spotifyRes.json();
 
@@ -55,7 +52,7 @@ export const GET: APIRoute = async ({ request }) => {
   setCache(cacheKey, data, 86400);
 
   const res = new Response(JSON.stringify(data), {
-    headers: { "Content-Type": "application/json", "X-Cache": "MISS" }
+    headers: { "Content-Type": "application/json", "X-Cache": "MISS" },
   });
 
   // reenviar cookies si hubo refresh

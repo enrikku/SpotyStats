@@ -9,22 +9,17 @@ import Loading from "../components/Loading.astro";
   <Loading />
   <section class="p-6 max-w-7xl mx-auto text-white">
     <div id="divDataNoLoaded" class="flex flex-col items-center mt-10">
-      <h1 class="text-4xl font-extrabold text-center mb-4 text-white">
-        Upload Your Spotify History
-      </h1>
+      <h1 class="text-4xl font-extrabold text-center mb-4 text-white">Upload Your Spotify History</h1>
 
       <p class="text-gray-400 text-center max-w-md mb-6">
-        Upload your <b>Streaming History JSON</b> files to generate your personalized
-        listening stats.
+        Upload your <b>Streaming History JSON</b> files to generate your personalized listening stats.
       </p>
 
       <div
         class="bg-[#0f172a] p-8 rounded-2xl shadow-xl border border-gray-700 max-w-md w-full flex flex-col items-center gap-5"
       >
         <!-- Icono moderno -->
-        <div
-          class="bg-[#1e293b] p-4 rounded-full shadow-md border border-gray-600"
-        >
+        <div class="bg-[#1e293b] p-4 rounded-full shadow-md border border-gray-600">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             class="w-10 h-10 text-green-400"
@@ -36,8 +31,7 @@ import Loading from "../components/Loading.astro";
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 12l-4 4m0 0l-4-4m4 4V4"
-            ></path>
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M16 12l-4 4m0 0l-4-4m4 4V4"></path>
           </svg>
         </div>
 
@@ -54,21 +48,13 @@ import Loading from "../components/Loading.astro";
         </label>
 
         <!-- Input oculto -->
-        <input
-          type="file"
-          id="jsonInput"
-          class="hidden"
-          accept="application/json"
-          multiple
-        />
+        <input type="file" id="jsonInput" class="hidden" accept="application/json" multiple />
       </div>
     </div>
 
     <div id="divDataLoaded" class="hidden">
       <div class="flex flex-col items-center">
-        <h1
-          class="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-primary bg-clip-text"
-        >
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-primary bg-clip-text">
           Basic Info
         </h1>
         <div class="grid grid-cols-2 gap-4 sm:gap-6">
@@ -89,25 +75,16 @@ import Loading from "../components/Loading.astro";
       <!-- Top 100 Listened Artists -->
       <TopArtistItem />
 
-      <h1
-        class="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-primary bg-clip-text"
-      >
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-primary bg-clip-text">
         Top 100 Listened Artists
       </h1>
 
-      <div
-        id="topArtistsContainer"
-        class="grid grid-cols-2 sm:grid-cols-4 gap-4"
-      >
-      </div>
+      <div id="topArtistsContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-4"></div>
 
       <!-- Top 100 Listened Songs -->
     </div>
     <div class="text-center text-sm text-base-content/70">
-      <p>
-        Note: All processing is done locally in your browser. Your data is not
-        uploaded or stored anywhere.
-      </p>
+      <p>Note: All processing is done locally in your browser. Your data is not uploaded or stored anywhere.</p>
     </div>
   </section>
 
@@ -118,40 +95,18 @@ import Loading from "../components/Loading.astro";
 
     // ------------------- VARIABLES HTML -------------------
     const input = document.getElementById("jsonInput") as HTMLInputElement;
-    const divDataNoLoaded = document.getElementById(
-      "divDataNoLoaded"
-    ) as HTMLDivElement;
-    const divDataLoaded = document.getElementById(
-      "divDataLoaded"
-    ) as HTMLDivElement;
-    const loadingOverlay = document.getElementById(
-      "loadingOverlay"
-    ) as HTMLDivElement;
-    const totalSongsPlayed = document.getElementById(
-      "totalSongsPlayed"
-    ) as HTMLParagraphElement;
-    const diferentSongs = document.getElementById(
-      "diferentSongs"
-    ) as HTMLParagraphElement;
-    const totalMinutes = document.getElementById(
-      "totalMinutes"
-    ) as HTMLParagraphElement;
-    const diferentArtists = document.getElementById(
-      "diferentArtists"
-    ) as HTMLParagraphElement;
-    const totalHours = document.getElementById(
-      "totalHours"
-    ) as HTMLParagraphElement;
-    const diferentAlbums = document.getElementById(
-      "diferentAlbums"
-    ) as HTMLParagraphElement;
-    const totalDays = document.getElementById(
-      "totalDays"
-    ) as HTMLParagraphElement;
+    const divDataNoLoaded = document.getElementById("divDataNoLoaded") as HTMLDivElement;
+    const divDataLoaded = document.getElementById("divDataLoaded") as HTMLDivElement;
+    const loadingOverlay = document.getElementById("loadingOverlay") as HTMLDivElement;
+    const totalSongsPlayed = document.getElementById("totalSongsPlayed") as HTMLParagraphElement;
+    const diferentSongs = document.getElementById("diferentSongs") as HTMLParagraphElement;
+    const totalMinutes = document.getElementById("totalMinutes") as HTMLParagraphElement;
+    const diferentArtists = document.getElementById("diferentArtists") as HTMLParagraphElement;
+    const totalHours = document.getElementById("totalHours") as HTMLParagraphElement;
+    const diferentAlbums = document.getElementById("diferentAlbums") as HTMLParagraphElement;
+    const totalDays = document.getElementById("totalDays") as HTMLParagraphElement;
 
-    const template = document.getElementById(
-      "topArtistTemplate"
-    ) as HTMLTemplateElement;
+    const template = document.getElementById("topArtistTemplate") as HTMLTemplateElement;
     const clone = template.content.cloneNode(true) as DocumentFragment;
 
     // --------------------------------------------------------------
@@ -203,10 +158,7 @@ import Loading from "../components/Loading.astro";
     }
 
     function filtredOnlySongs(data: SpotifyExtendedStreamingHistory[]) {
-      return data.filter(
-        (record: SpotifyExtendedStreamingHistory) =>
-          record.master_metadata_album_artist_name
-      );
+      return data.filter((record: SpotifyExtendedStreamingHistory) => record.master_metadata_album_artist_name);
     }
 
     function processBasicInfo(songsData: SpotifyExtendedStreamingHistory[]) {
@@ -224,9 +176,7 @@ import Loading from "../components/Loading.astro";
       const uniqueSongs = new Set(
         songsData.map(
           (song: SpotifyExtendedStreamingHistory) =>
-            song.master_metadata_track_name +
-            " - " +
-            song.master_metadata_album_artist_name
+            song.master_metadata_track_name + " - " + song.master_metadata_album_artist_name
         )
       ).size;
 
@@ -234,21 +184,14 @@ import Loading from "../components/Loading.astro";
 
       // Total Minutes
       const totalMinutesPlayed = Math.floor(
-        songsData.reduce(
-          (acc: number, song: SpotifyExtendedStreamingHistory) =>
-            acc + song.ms_played,
-          0
-        ) / 60000
+        songsData.reduce((acc: number, song: SpotifyExtendedStreamingHistory) => acc + song.ms_played, 0) / 60000
       );
 
       TotalMinutes = totalMinutesPlayed;
 
       // Different Artists
       const uniqueArtists = new Set(
-        songsData.map(
-          (song: SpotifyExtendedStreamingHistory) =>
-            song.master_metadata_album_artist_name
-        )
+        songsData.map((song: SpotifyExtendedStreamingHistory) => song.master_metadata_album_artist_name)
       ).size;
 
       DifferentArtists = uniqueArtists;
@@ -262,9 +205,7 @@ import Loading from "../components/Loading.astro";
       const uniqueAlbums = new Set(
         songsData.map(
           (song: SpotifyExtendedStreamingHistory) =>
-            song.master_metadata_album_album_name +
-            " - " +
-            song.master_metadata_album_artist_name
+            song.master_metadata_album_album_name + " - " + song.master_metadata_album_artist_name
         )
       ).size;
 
@@ -289,11 +230,9 @@ import Loading from "../components/Loading.astro";
 
     async function processData(data: SpotifyExtendedStreamingHistory[]) {
       if (loadingOverlay) loadingOverlay.classList.remove("hidden");
-      const songsData: SpotifyExtendedStreamingHistory[] =
-        filtredOnlySongs(data);
+      const songsData: SpotifyExtendedStreamingHistory[] = filtredOnlySongs(data);
 
-      const top100Artists: ResultTopp100Artist[] =
-        await getTop100Artists(songsData);
+      const top100Artists: ResultTopp100Artist[] = await getTop100Artists(songsData);
       renderTopArtists(top100Artists);
 
       const basicInfo = processBasicInfo(songsData);
@@ -309,16 +248,13 @@ import Loading from "../components/Loading.astro";
         totalSongsPlayed.textContent = `${basicInfo.TotalSongsPlayed.toLocaleString(userLocale)} plays`;
       if (diferentSongs)
         diferentSongs.textContent = `${basicInfo.DifferentSongs.toLocaleString(userLocale)} different songs`;
-      if (totalMinutes)
-        totalMinutes.textContent = `${basicInfo.TotalMinutes.toLocaleString(userLocale)} minutes`;
+      if (totalMinutes) totalMinutes.textContent = `${basicInfo.TotalMinutes.toLocaleString(userLocale)} minutes`;
       if (diferentArtists)
         diferentArtists.textContent = `${basicInfo.DifferentArtists.toLocaleString(userLocale)} different artists`;
-      if (totalHours)
-        totalHours.textContent = `${basicInfo.TotalHours.toLocaleString(userLocale)} hours`;
+      if (totalHours) totalHours.textContent = `${basicInfo.TotalHours.toLocaleString(userLocale)} hours`;
       if (diferentAlbums)
         diferentAlbums.textContent = `${basicInfo.DifferentAlbums.toLocaleString(userLocale)} different albums`;
-      if (totalDays)
-        totalDays.textContent = `${basicInfo.TotalDays.toLocaleString(userLocale)} days`;
+      if (totalDays) totalDays.textContent = `${basicInfo.TotalDays.toLocaleString(userLocale)} days`;
     }
 
     function renderTopArtists(top100: any[]) {
