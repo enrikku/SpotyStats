@@ -2,27 +2,24 @@
 /* No necesita props */
 ---
 
-<div id="topArtistTemplate" class="hidden">
+<template id="topArtistTemplate" class="hidden">
   <div class="card bg-base-200 hover:bg-base-300 transition-colors">
     <div class="card-body p-4 sm:p-6 flex items-center gap-4">
-
-      <!-- Imagen del artista -->
-      <img 
-        class="artist-image w-16 h-16 rounded-full object-cover border border-gray-600"
+      <img
+        class="artist-image w-20 h-20 rounded-2xl sm:w-50 sm:h-50 object-cover border border-gray-600"
         src=""
+        loading="lazy"
         alt="Artist image"
       />
 
       <div>
-        <h2 class="artist-name card-title text-base sm:text-lg text-primary"></h2>
+        <h2 class="artist-name card-title text-base sm:text-lg text-primary">
+        </h2>
 
         <p class="artist-minutes text-sm sm:text-base text-base-content/70"></p>
 
         <p class="artist-plays text-sm sm:text-base text-base-content/70"></p>
-
-        <p class="artist-number text-sm sm:text-base text-base-content/70"></p>
       </div>
-
     </div>
   </div>
-</div>
+</template>

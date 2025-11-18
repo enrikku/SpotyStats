@@ -65,15 +65,22 @@ import Loading from "../components/Loading.astro";
     </div>
 
     <div id="divDataLoaded" class="hidden">
-      <div class="grid grid-cols-2 gap-4 sm:gap-6">
-        <MiniCardStats title="Total Songs Played" idP="totalSongsPlayed" />
-        <MiniCardStats title="Different Songs" idP="diferentSongs" />
-        <MiniCardStats title="Total Minutes" idP="totalMinutes" />
-        <MiniCardStats title="Different Artists" idP="diferentArtists" />
-        <MiniCardStats title="Total Hours" idP="totalHours" />
-        <MiniCardStats title="Different Albums" idP="diferentAlbums" />
-        <div class="col-span-2 grid place-items-center gap-4 sm:gap-6">
-          <MiniCardStats title="Total Days" idP="totalDays" />
+      <div class="flex flex-col items-center">
+        <h1
+          class="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-primary bg-clip-text"
+        >
+          Basic Info
+        </h1>
+        <div class="grid grid-cols-2 gap-4 sm:gap-6">
+          <MiniCardStats title="Total Songs Played" idP="totalSongsPlayed" />
+          <MiniCardStats title="Different Songs" idP="diferentSongs" />
+          <MiniCardStats title="Total Minutes" idP="totalMinutes" />
+          <MiniCardStats title="Different Artists" idP="diferentArtists" />
+          <MiniCardStats title="Total Hours" idP="totalHours" />
+          <MiniCardStats title="Different Albums" idP="diferentAlbums" />
+          <div class="col-span-2 grid place-items-center gap-4 sm:gap-6">
+            <MiniCardStats title="Total Days" idP="totalDays" />
+          </div>
         </div>
       </div>
 
@@ -81,15 +88,17 @@ import Loading from "../components/Loading.astro";
 
       <!-- Top 100 Listened Artists -->
       <TopArtistItem />
+
+      <h1
+        class="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-primary bg-clip-text"
+      >
+        Top 100 Listened Artists
+      </h1>
+
       <div
         id="topArtistsContainer"
-        class="grid grid-cols-1 sm:grid-cols-4 gap-4"
+        class="grid grid-cols-2 sm:grid-cols-4 gap-4"
       >
-        <h1
-          class="text-2xl sm:text-3xl font-bold mb-2 sm:mb-4 col-span-4 text-center"
-        >
-          Top 100 Listened Artists
-        </h1>
       </div>
 
       <!-- Top 100 Listened Songs -->
@@ -103,15 +112,82 @@ import Loading from "../components/Loading.astro";
   </section>
 
   <script>
-    let allData = [];
+    import type { SpotifyExtendedStreamingHistory } from "../interfaces/SpotifyExtendedStreamingHistory.ts";
+    import type { ResultTopp100Artist } from "../interfaces/ResultTopp100Artist.ts";
+    import type { BasicInfo } from "../interfaces/BasicInfo.ts";
 
-    const input: any = document.getElementById("jsonInput");
-    const divDataNoLoaded = document.getElementById("divDataNoLoaded");
+    // ------------------- VARIABLES HTML -------------------
+    const input = document.getElementById("jsonInput") as HTMLInputElement;
+    const divDataNoLoaded = document.getElementById(
+      "divDataNoLoaded"
+    ) as HTMLDivElement;
+    const divDataLoaded = document.getElementById(
+      "divDataLoaded"
+    ) as HTMLDivElement;
+    const loadingOverlay = document.getElementById(
+      "loadingOverlay"
+    ) as HTMLDivElement;
+    const totalSongsPlayed = document.getElementById(
+      "totalSongsPlayed"
+    ) as HTMLParagraphElement;
+    const diferentSongs = document.getElementById(
+      "diferentSongs"
+    ) as HTMLParagraphElement;
+    const totalMinutes = document.getElementById(
+      "totalMinutes"
+    ) as HTMLParagraphElement;
+    const diferentArtists = document.getElementById(
+      "diferentArtists"
+    ) as HTMLParagraphElement;
+    const totalHours = document.getElementById(
+      "totalHours"
+    ) as HTMLParagraphElement;
+    const diferentAlbums = document.getElementById(
+      "diferentAlbums"
+    ) as HTMLParagraphElement;
+    const totalDays = document.getElementById(
+      "totalDays"
+    ) as HTMLParagraphElement;
+
+    const template = document.getElementById(
+      "topArtistTemplate"
+    ) as HTMLTemplateElement;
+    const clone = template.content.cloneNode(true) as DocumentFragment;
+
+    // --------------------------------------------------------------
+
+    // ------------------- VARIABLES LOCALSTORAGE -------------------
+    const cachedTop100 = localStorage.getItem("top100ArtistsCache");
+    const cachedBasicInfo = localStorage.getItem("basicInfoCache");
+    // --------------------------------------------------------------
+
+    // ------------------- VARIABLES GLOBALES -------------------
+    let allData: SpotifyExtendedStreamingHistory[] = [];
+    const userLocale = navigator.language || "en-US";
+    // --------------------------------------------------------------
+
+    if (cachedBasicInfo && cachedTop100) {
+      console.log("Using cached data on load.");
+      const basicInfo: BasicInfo = JSON.parse(cachedBasicInfo);
+      renderBasicInfo(basicInfo);
+
+      const top100Artists: ResultTopp100Artist[] = JSON.parse(cachedTop100);
+      renderTopArtists(top100Artists);
+
+      if (divDataNoLoaded) divDataNoLoaded.className = "hidden";
+      if (divDataLoaded) divDataLoaded.className = "";
+    }
 
     input?.addEventListener("change", async () => {
       const files = input.files;
+      if (files === null) return;
       if (!files.length) return;
 
+      await inputFileChange(files);
+      processData(allData);
+    });
+
+    async function inputFileChange(files: FileList) {
       allData = [];
 
       for (const file of files) {
@@ -124,155 +200,153 @@ import Loading from "../components/Loading.astro";
           console.error("Error reading " + file.name);
         }
       }
+    }
 
-      processData(allData);
-    });
-
-    function filtredOnlySongs(data: any) {
+    function filtredOnlySongs(data: SpotifyExtendedStreamingHistory[]) {
       return data.filter(
-        (record: any) => record.master_metadata_album_artist_name
+        (record: SpotifyExtendedStreamingHistory) =>
+          record.master_metadata_album_artist_name
       );
     }
 
-    function processBasicInfo(songsData: any) {
-      const totalSongsPlayed = document.getElementById("totalSongsPlayed");
-      const diferentSongs = document.getElementById("diferentSongs");
-      const totalMinutes = document.getElementById("totalMinutes");
-      const diferentArtists = document.getElementById("diferentArtists");
-      const totalHours = document.getElementById("totalHours");
-      const diferentAlbums = document.getElementById("diferentAlbums");
-      const totalDays = document.getElementById("totalDays");
+    function processBasicInfo(songsData: SpotifyExtendedStreamingHistory[]) {
+      let TotalSongsPlayed: number = 0;
+      let TotalMinutes: number = 0;
+      let TotalHours: number = 0;
+      let TotalDays: number = 0;
+      let DifferentSongs: number = 0;
+      let DifferentArtists: number = 0;
+      let DifferentAlbums: number = 0;
 
-      // Total Songs Played
-      if (totalSongsPlayed)
-        totalSongsPlayed.textContent = `${songsData.length.toLocaleString("en-US")} plays`;
+      TotalSongsPlayed = songsData.length;
 
       // Different Songs
       const uniqueSongs = new Set(
         songsData.map(
-          (song: any) =>
+          (song: SpotifyExtendedStreamingHistory) =>
             song.master_metadata_track_name +
             " - " +
             song.master_metadata_album_artist_name
         )
       ).size;
-      if (diferentSongs) {
-        diferentSongs.textContent = `${uniqueSongs.toLocaleString("en-US")} different songs`;
-      }
+
+      DifferentSongs = uniqueSongs;
 
       // Total Minutes
       const totalMinutesPlayed = Math.floor(
-        songsData.reduce((acc: any, song: any) => acc + song.ms_played, 0) /
-          60000
+        songsData.reduce(
+          (acc: number, song: SpotifyExtendedStreamingHistory) =>
+            acc + song.ms_played,
+          0
+        ) / 60000
       );
-      if (totalMinutes) {
-        totalMinutes.textContent = `${totalMinutesPlayed.toLocaleString("en-US")} minutes`;
-      }
+
+      TotalMinutes = totalMinutesPlayed;
 
       // Different Artists
       const uniqueArtists = new Set(
-        songsData.map((song: any) => song.master_metadata_album_artist_name)
+        songsData.map(
+          (song: SpotifyExtendedStreamingHistory) =>
+            song.master_metadata_album_artist_name
+        )
       ).size;
 
-      if (diferentArtists)
-        diferentArtists.textContent = `${uniqueArtists.toLocaleString("en-US")} different artists`;
+      DifferentArtists = uniqueArtists;
 
       // Total Hours
       const totalHoursPlayed = Math.floor(totalMinutesPlayed / 60);
 
-      if (totalHours)
-        totalHours.textContent = `${totalHoursPlayed.toLocaleString("en-US")} hours`;
+      TotalHours = totalHoursPlayed;
 
       // Different Albums
       const uniqueAlbums = new Set(
         songsData.map(
-          (song: any) =>
-            song.master_metadata_album_name +
+          (song: SpotifyExtendedStreamingHistory) =>
+            song.master_metadata_album_album_name +
             " - " +
             song.master_metadata_album_artist_name
         )
       ).size;
 
-      if (diferentAlbums)
-        diferentAlbums.textContent = `${uniqueAlbums.toLocaleString("en-US")} different albums`;
+      DifferentAlbums = uniqueAlbums;
 
       // Total Days
-      if (totalDays)
-        totalDays.textContent = `${Math.floor(totalHoursPlayed / 24).toLocaleString("en-US")} days`;
+      TotalDays = Math.floor(totalHoursPlayed / 24);
+
+      let basicInfo: BasicInfo = {
+        TotalSongsPlayed: TotalSongsPlayed,
+        DifferentSongs: DifferentSongs,
+        TotalMinutes: TotalMinutes,
+        DifferentArtists: DifferentArtists,
+        TotalHours: TotalHours,
+        DifferentAlbums: DifferentAlbums,
+        TotalDays: TotalDays,
+      };
+
+      localStorage.setItem("basicInfoCache", JSON.stringify(basicInfo));
+      return basicInfo;
     }
 
-    async function processData(data: any) {
-      const loadingOverlay = document.getElementById("loadingOverlay");
+    async function processData(data: SpotifyExtendedStreamingHistory[]) {
       if (loadingOverlay) loadingOverlay.classList.remove("hidden");
-      const songsData = filtredOnlySongs(data);
-      const divDataLoaded = document.getElementById("divDataLoaded");
-      // Top 100 Artists
-      //const token = await getAccesTokenCookie();
-      const top100Artists = getTop100Artists(songsData);
+      const songsData: SpotifyExtendedStreamingHistory[] =
+        filtredOnlySongs(data);
 
-      processBasicInfo(songsData);
-      await renderTopArtists(top100Artists);
+      const top100Artists: ResultTopp100Artist[] =
+        await getTop100Artists(songsData);
+      renderTopArtists(top100Artists);
+
+      const basicInfo = processBasicInfo(songsData);
+      renderBasicInfo(basicInfo);
 
       if (divDataNoLoaded) divDataNoLoaded.className = "hidden";
       if (divDataLoaded) divDataLoaded.className = "";
       if (loadingOverlay) loadingOverlay.classList.add("hidden");
     }
 
-    async function renderTopArtists(top100: any) {
-      var total = top100.length;
-      var count = 0;
-      for (const item of top100) {
-        count++;
-        var trackId = item.idTrack?.split(":")[2];
+    function renderBasicInfo(basicInfo: BasicInfo) {
+      if (totalSongsPlayed)
+        totalSongsPlayed.textContent = `${basicInfo.TotalSongsPlayed.toLocaleString(userLocale)} plays`;
+      if (diferentSongs)
+        diferentSongs.textContent = `${basicInfo.DifferentSongs.toLocaleString(userLocale)} different songs`;
+      if (totalMinutes)
+        totalMinutes.textContent = `${basicInfo.TotalMinutes.toLocaleString(userLocale)} minutes`;
+      if (diferentArtists)
+        diferentArtists.textContent = `${basicInfo.DifferentArtists.toLocaleString(userLocale)} different artists`;
+      if (totalHours)
+        totalHours.textContent = `${basicInfo.TotalHours.toLocaleString(userLocale)} hours`;
+      if (diferentAlbums)
+        diferentAlbums.textContent = `${basicInfo.DifferentAlbums.toLocaleString(userLocale)} different albums`;
+      if (totalDays)
+        totalDays.textContent = `${basicInfo.TotalDays.toLocaleString(userLocale)} days`;
+    }
 
-        //var token = await getAccesTokenCookie();
-
-        //var sonData = await getSong(token, trackId);
-        var sonData = await fetch(`/api/spotify/track?id=${trackId}`).then(
-          (res) => res.json()
-        );
-        var artista = sonData.artists[0].uri.replace("spotify:artist:", "");
-
-        // Pausa REAL y en SERIE
-        await new Promise((resolve) => setTimeout(resolve, 100));
-
-        //var artistData = await getArtist(token, artista);
-        var artistData = await fetch(`/api/spotify/artist?id=${artista}`).then(
-          (res) => res.json()
-        );
-        var image = artistData.images[0]?.url || "";
-
-        // Aquí el fix 👇
-        item.artistImage = image;
-      }
-
+    function renderTopArtists(top100: any[]) {
       const container = document.getElementById("topArtistsContainer");
-      const template = document.getElementById("topArtistTemplate");
 
-      if (container == null || template == null) return;
-      container.innerHTML = ""; // limpiar antes
+      if (!container || !template) return;
 
-      var i = 0;
-      top100.forEach((item: any) => {
-        i++;
-        const clone: any = template.cloneNode(true);
-        clone.id = ""; // eliminar ID duplicado
-        clone.classList.remove("hidden");
+      container.innerHTML = "";
 
-        clone.querySelector(".artist-name").textContent =
-          "#" + i + " " + item.artist;
-        clone.querySelector(".artist-minutes").textContent =
-          `${item.minutes} minutos escuchados`;
-        clone.querySelector(".artist-plays").textContent =
-          `${item.plays} reproducciones`;
+      top100.forEach((item, index) => {
+        const clone = template.content.cloneNode(true) as DocumentFragment;
+        const nameEl = clone.querySelector(".artist-name") as HTMLElement;
+        const minutesEl = clone.querySelector(".artist-minutes") as HTMLElement;
+        const playsEl = clone.querySelector(".artist-plays") as HTMLElement;
+        const imgEl = clone.querySelector(".artist-image") as HTMLImageElement;
 
-        clone.querySelector(".artist-image").src = item.artistImage;
+        nameEl.textContent = `#${index + 1} ${item.artist}`;
+        minutesEl.textContent = `${item.minutes.toLocaleString("es-ES")} minutos escuchados`;
+        playsEl.textContent = `${item.plays.toLocaleString("es-ES")} reproducciones`;
+
+        imgEl.src = item.artistImage;
+        imgEl.alt = `Foto de ${item.artist}`;
 
         container.appendChild(clone);
       });
     }
 
-    function getTop100Artists(data: any) {
+    async function getTop100Artists(data: SpotifyExtendedStreamingHistory[]) {
       const artistsMap = new Map();
 
       for (const record of data) {
@@ -295,7 +369,7 @@ import Loading from "../components/Loading.astro";
         entry.plays += 1;
       }
 
-      const result = [...artistsMap.values()]
+      const result: ResultTopp100Artist[] = [...artistsMap.values()]
         .sort((a, b) => b.totalMs - a.totalMs)
         .slice(0, 100)
         .map((item) => ({
@@ -303,7 +377,67 @@ import Loading from "../components/Loading.astro";
           minutes: Math.floor(item.totalMs / 60000),
           plays: item.plays,
           idTrack: item.idTrack,
+          artistImage: "",
         }));
+
+      await Promise.all(result);
+      await cargarImagenesArtistas(result);
+
+      // Guardar resultado en caché
+      localStorage.setItem("top100ArtistsCache", JSON.stringify(result));
+      console.log("Top 100 artists cached.");
+      return result;
+    }
+
+    function delay(ms: number) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async function cargarImagenesArtistas(result: ResultTopp100Artist[]) {
+      for (const item of result) {
+        const trackId = item.idTrack?.split(":")[2];
+        if (!trackId) {
+          item.artistImage = "";
+          continue;
+        }
+
+        try {
+          // --- PETICIÓN TRACK ---
+          const trackRes = await fetch(`/api/spotify/track?id=${trackId}`);
+          if (!trackRes.ok) {
+            console.warn("Error track:", trackRes.status);
+            item.artistImage = "";
+            continue;
+          }
+
+          const sonData = await trackRes.json();
+          const artistaUri = sonData.artists?.[0]?.uri;
+
+          if (!artistaUri) {
+            item.artistImage = "";
+            continue;
+          }
+
+          const artista = artistaUri.replace("spotify:artist:", "");
+
+          // Esperar 500 ms antes de la siguiente petición
+          await delay(100);
+
+          // --- PETICIÓN ARTISTA ---
+          const artistRes = await fetch(`/api/spotify/artist?id=${artista}`);
+          if (!artistRes.ok) {
+            console.warn("Error artist:", artistRes.status);
+            item.artistImage = "";
+            continue;
+          }
+
+          const artistData = await artistRes.json();
+          item.artistImage = artistData.images?.[0]?.url || "";
+        } catch (err) {
+          console.error("Error cargando artista", item.artist, err);
+          item.artistImage = "";
+        }
+      }
 
       return result;
     }
