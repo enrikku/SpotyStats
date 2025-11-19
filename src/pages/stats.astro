@@ -308,27 +308,19 @@ import { saveJson } from "../utils/indexeddb";
 
         await procesarDatosDelArtista(artistName);
 
-        // window.location.href = `/artist/${encodeURIComponent(artistName)}`;
+        window.location.href = `/artist/${encodeURIComponent(artistName)}`;
       });
     }
 
     async function procesarDatosDelArtista(artistName: string) {
-      // Aquí puedes agregar cualquier procesamiento adicional que necesites
-      console.log("Processing data for artist:", artistName);
-      // Por ejemplo, podrías filtrar las canciones del artista y almacenarlas en localStorage
       const songsByArtist = allData.filter(
         (record) => record.master_metadata_album_artist_name === artistName
       );
-      console.log(allData)
-
-      console.log(`Found ${songsByArtist.length} songs for artist "${artistName}".`);
-
+      
       localStorage.setItem(
         `artistData_${artistName}`,
         JSON.stringify(songsByArtist)
       );
-
-      alert(`Data for artist "${artistName}" has been processed and stored.`);
     }
 
 
@@ -383,54 +375,12 @@ import { saveJson } from "../utils/indexeddb";
       await cargarImagenesArtistas(result);
 
       localStorage.setItem("top100ArtistsCache", JSON.stringify(result));
-      console.log("Top 100 artists cached.");
+      
 
       return result;
     }
 
-    // async function getTop100Artists(data: SpotifyExtendedStreamingHistory[]) {
-    //   const artistsMap = new Map();
-
-    //   for (const record of data) {
-    //     const artist = record.master_metadata_album_artist_name;
-    //     const ms = record.ms_played || 0;
-
-    //     if (!artist) continue; // ignorar registros sin artista
-
-    //     if (!artistsMap.has(artist)) {
-    //       artistsMap.set(artist, {
-    //         artist,
-    //         totalMs: 0,
-    //         plays: 0,
-    //         idTrack: record.spotify_track_uri,
-    //       });
-    //     }
-
-    //     const entry = artistsMap.get(artist);
-    //     entry.totalMs += ms;
-    //     entry.plays += 1;
-    //   }
-
-    //   const result: ResultTopp100Artist[] = [...artistsMap.values()]
-    //     .sort((a, b) => b.totalMs - a.totalMs)
-    //     .slice(0, 100)
-    //     .map((item) => ({
-    //       artist: item.artist,
-    //       minutes: Math.floor(item.totalMs / 60000),
-    //       plays: item.plays,
-    //       idTrack: item.idTrack,
-    //       artistImage: "",
-    //     }));
-
-    //   await Promise.all(result);
-    //   await cargarImagenesArtistas(result);
-
-    //   // Guardar resultado en caché
-    //   localStorage.setItem("top100ArtistsCache", JSON.stringify(result));
-    //   console.log("Top 100 artists cached.");
-    //   return result;
-    // }
-
+    
     function delay(ms: number) {
       return new Promise((resolve) => setTimeout(resolve, ms));
     }
