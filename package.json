@@ -22,7 +22,7 @@
     "astro": "^5.5.5",
     "buffer": "^6.0.3",
     "canvas-confetti": "^1.9.3",
-    "chart.js": "^4.4.9",
+    "chart.js": "^4.5.1",
     "path-to-regexp": "^6.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

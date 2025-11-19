@@ -4,4 +4,6 @@ export interface ResultTopp100Artist {
   plays: number;
   idTrack: string;
   artistImage: string;
+  firstPlay: string;
+  lastPlay: string;
 }

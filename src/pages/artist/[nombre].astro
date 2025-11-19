@@ -1,0 +1,66 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+
+const { nombre } = Astro.params;
+---
+
+<MainLayout content={{ title: `Top Artists - ${nombre}` }}>
+  <section class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Top Artists</h1>
+    <div id="topArtistsContainer" class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <!-- Top artists will be dynamically inserted here -->
+      <canvas id="minutesPerYearChart"></canvas>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    import { loadJson } from "../../utils/indexeddb";
+    import type { SpotifyExtendedStreamingHistory } from "../../interfaces/SpotifyExtendedStreamingHistory.ts";
+
+    import {
+      getMinutesPerDay,
+      getPlaysPerDay,
+      getTotalMinutes,
+      getTopTracks,
+      getMinutesPerYear,
+    } from "../../utils/sorter.ts";
+
+    import { renderMinutesPerYearChart } from "../../utils/charts.ts";
+    
+    var artistName = decodeURIComponent(document.URL.split("/").pop() || "");
+
+    const history = await loadJson("extendedHistory");
+    console.log(history);
+
+    if (history) {
+      const artistData = history.filter(
+        (record: SpotifyExtendedStreamingHistory) => record.master_metadata_album_artist_name === artistName
+      );
+      console.log(artistData);
+      const minutesPerDay = getMinutesPerDay(artistData);
+      console.log("Minutes per day:");
+      console.log(minutesPerDay);
+
+      const playsPerDay = getPlaysPerDay(artistData);
+      console.log("Plays per day:");
+      console.log(playsPerDay);
+
+      const totalMinutes = getTotalMinutes(artistData);
+      console.log("Total minutes:");
+      console.log(totalMinutes);
+
+      const topTracks = getTopTracks(artistData);
+      console.log("Top tracks:");
+      console.log(topTracks);
+
+      const minutesPerYear = getMinutesPerYear(artistData);
+      console.log("Minutes per year:");
+      console.log(minutesPerYear);
+
+      await renderMinutesPerYearChart(artistData, document.getElementById("topArtistsContainer")!);
+    } else {
+      console.log("No extended history data found.");
+    }
+  </script>
+</MainLayout>

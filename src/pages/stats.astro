@@ -79,7 +79,7 @@ import Loading from "../components/Loading.astro";
         Top 100 Listened Artists
       </h1>
 
-      <div id="topArtistsContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-4"></div>
+      <div id="topArtistsContainer" class="grid grid-cols-1 sm:grid-cols-4 gap-4"></div>
 
       <!-- Top 100 Listened Songs -->
     </div>
@@ -92,6 +92,7 @@ import Loading from "../components/Loading.astro";
     import type { SpotifyExtendedStreamingHistory } from "../interfaces/SpotifyExtendedStreamingHistory.ts";
     import type { ResultTopp100Artist } from "../interfaces/ResultTopp100Artist.ts";
     import type { BasicInfo } from "../interfaces/BasicInfo.ts";
+import { saveJson } from "../utils/indexeddb";
 
     // ------------------- VARIABLES HTML -------------------
     const input = document.getElementById("jsonInput") as HTMLInputElement;
@@ -228,9 +229,12 @@ import Loading from "../components/Loading.astro";
       return basicInfo;
     }
 
+
     async function processData(data: SpotifyExtendedStreamingHistory[]) {
       if (loadingOverlay) loadingOverlay.classList.remove("hidden");
       const songsData: SpotifyExtendedStreamingHistory[] = filtredOnlySongs(data);
+
+      await saveJson("extendedHistory", songsData);
 
       const top100Artists: ResultTopp100Artist[] = await getTop100Artists(songsData);
       renderTopArtists(top100Artists);
@@ -270,10 +274,26 @@ import Loading from "../components/Loading.astro";
         const minutesEl = clone.querySelector(".artist-minutes") as HTMLElement;
         const playsEl = clone.querySelector(".artist-plays") as HTMLElement;
         const imgEl = clone.querySelector(".artist-image") as HTMLImageElement;
+        const firstPlayEl = clone.querySelector(".artist-firstplay") as HTMLElement;
+        const lastPlayEl = clone.querySelector(".artist-lastplay") as HTMLElement;
+        const rankEl = clone.querySelector(".rank") as HTMLElement;
+        const linkEl = clone.querySelector(".artist-link") as HTMLAnchorElement;
 
-        nameEl.textContent = `#${index + 1} ${item.artist}`;
-        minutesEl.textContent = `${item.minutes.toLocaleString("es-ES")} minutos escuchados`;
-        playsEl.textContent = `${item.plays.toLocaleString("es-ES")} reproducciones`;
+        //linkEl.href = `/artist/${encodeURIComponent(item.artist)}`;
+        setupArtistLink(linkEl, item.artist);
+
+        firstPlayEl.textContent = `${new Date(item.firstPlay).toLocaleDateString(userLocale)}`;
+        lastPlayEl.textContent = `${new Date(item.lastPlay).toLocaleDateString(userLocale)}`;
+
+        rankEl.textContent = `#${index + 1}`;
+        nameEl.textContent = `${item.artist}`;
+
+        var totalMinutes = item.minutes;
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+
+        minutesEl.textContent = `${hours}h ${minutes}m`;
+        playsEl.textContent = `${item.plays.toLocaleString(userLocale)}`;
 
         imgEl.src = item.artistImage;
         imgEl.alt = `Foto de ${item.artist}`;
@@ -282,6 +302,36 @@ import Loading from "../components/Loading.astro";
       });
     }
 
+    function setupArtistLink(linkEl: HTMLAnchorElement, artistName: string) {
+      linkEl.addEventListener("click", async (event) => {
+        event.preventDefault();
+
+        await procesarDatosDelArtista(artistName);
+
+        // window.location.href = `/artist/${encodeURIComponent(artistName)}`;
+      });
+    }
+
+    async function procesarDatosDelArtista(artistName: string) {
+      // Aquí puedes agregar cualquier procesamiento adicional que necesites
+      console.log("Processing data for artist:", artistName);
+      // Por ejemplo, podrías filtrar las canciones del artista y almacenarlas en localStorage
+      const songsByArtist = allData.filter(
+        (record) => record.master_metadata_album_artist_name === artistName
+      );
+      console.log(allData)
+
+      console.log(`Found ${songsByArtist.length} songs for artist "${artistName}".`);
+
+      localStorage.setItem(
+        `artistData_${artistName}`,
+        JSON.stringify(songsByArtist)
+      );
+
+      alert(`Data for artist "${artistName}" has been processed and stored.`);
+    }
+
+
     async function getTop100Artists(data: SpotifyExtendedStreamingHistory[]) {
       const artistsMap = new Map();
 
@@ -289,7 +339,9 @@ import Loading from "../components/Loading.astro";
         const artist = record.master_metadata_album_artist_name;
         const ms = record.ms_played || 0;
 
-        if (!artist) continue; // ignorar registros sin artista
+        if (!artist) continue;
+
+        const ts = new Date(record.ts).getTime(); // convertir a timestamp numérico
 
         if (!artistsMap.has(artist)) {
           artistsMap.set(artist, {
@@ -297,12 +349,21 @@ import Loading from "../components/Loading.astro";
             totalMs: 0,
             plays: 0,
             idTrack: record.spotify_track_uri,
+            firstPlay: ts,
+            lastPlay: ts,
           });
         }
 
         const entry = artistsMap.get(artist);
+
         entry.totalMs += ms;
         entry.plays += 1;
+
+        // Actualizar primera reproducción
+        if (ts < entry.firstPlay) entry.firstPlay = ts;
+
+        // Actualizar última reproducción
+        if (ts > entry.lastPlay) entry.lastPlay = ts;
       }
 
       const result: ResultTopp100Artist[] = [...artistsMap.values()]
@@ -314,16 +375,61 @@ import Loading from "../components/Loading.astro";
           plays: item.plays,
           idTrack: item.idTrack,
           artistImage: "",
+          firstPlay: new Date(item.firstPlay).toISOString(), // convertir de vuelta a ISO
+          lastPlay: new Date(item.lastPlay).toISOString(),
         }));
 
       await Promise.all(result);
       await cargarImagenesArtistas(result);
 
-      // Guardar resultado en caché
       localStorage.setItem("top100ArtistsCache", JSON.stringify(result));
       console.log("Top 100 artists cached.");
+
       return result;
     }
+
+    // async function getTop100Artists(data: SpotifyExtendedStreamingHistory[]) {
+    //   const artistsMap = new Map();
+
+    //   for (const record of data) {
+    //     const artist = record.master_metadata_album_artist_name;
+    //     const ms = record.ms_played || 0;
+
+    //     if (!artist) continue; // ignorar registros sin artista
+
+    //     if (!artistsMap.has(artist)) {
+    //       artistsMap.set(artist, {
+    //         artist,
+    //         totalMs: 0,
+    //         plays: 0,
+    //         idTrack: record.spotify_track_uri,
+    //       });
+    //     }
+
+    //     const entry = artistsMap.get(artist);
+    //     entry.totalMs += ms;
+    //     entry.plays += 1;
+    //   }
+
+    //   const result: ResultTopp100Artist[] = [...artistsMap.values()]
+    //     .sort((a, b) => b.totalMs - a.totalMs)
+    //     .slice(0, 100)
+    //     .map((item) => ({
+    //       artist: item.artist,
+    //       minutes: Math.floor(item.totalMs / 60000),
+    //       plays: item.plays,
+    //       idTrack: item.idTrack,
+    //       artistImage: "",
+    //     }));
+
+    //   await Promise.all(result);
+    //   await cargarImagenesArtistas(result);
+
+    //   // Guardar resultado en caché
+    //   localStorage.setItem("top100ArtistsCache", JSON.stringify(result));
+    //   console.log("Top 100 artists cached.");
+    //   return result;
+    // }
 
     function delay(ms: number) {
       return new Promise((resolve) => setTimeout(resolve, ms));

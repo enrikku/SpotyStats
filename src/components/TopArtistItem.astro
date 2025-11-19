@@ -1,24 +1,69 @@
 ---
-/* No necesita props */
+import Clock from "./icons/clock.astro";
+import Play from "./icons/plays.astro";
+import Calendar from "./icons/calendar.astro";
+import Spotify from "./icons/spotify.astro";
 ---
 
-<template id="topArtistTemplate" class="hidden">
-  <div class="card bg-base-200 hover:bg-base-300 transition-colors">
-    <div class="card-body p-4 sm:p-6 flex items-center gap-4">
-      <img
-        class="artist-image w-20 h-20 rounded-2xl sm:w-50 sm:h-50 object-cover border border-gray-600"
-        src=""
-        loading="lazy"
-        alt="Artist image"
-      />
+<template
+  class=""
+  id="topArtistTemplate"
+>
+  <a href="" class="group p-0 border-primary border rounded-lg overflow-hidden shadow-sm bg-card artist-link">
+    
+    <div class="relative h-60 overflow-hidden">    
+      <img src="" alt="" class="w-full h-full object-cover artist-image" />
+      <div class="absolute inset-0 bg-linear-to-t from-background via-background/50 to-transparent"></div>
 
+      <div class="absolute top-3 right-3 bg-primary text-white px-2.5 py-1 rounded-full text-xs font-bold rank"></div>
+    </div>
+
+    
+    <div class="p-4 space-y-3">
+    
       <div>
-        <h2 class="artist-name card-title text-base sm:text-lg text-primary">
-        </h2>
+        <h3 class="text-lg font-bold text-foreground truncate artist-name"></h3>
+      </div>
 
-        <p class="artist-minutes text-sm sm:text-base text-base-content/70"></p>
+      
+      <div class="grid grid-cols-2 gap-3">
+      
+        <div class="bg-card border border-border rounded-lg p-3 space-y-1">
+          <div class="flex items-center gap-1.5 text-muted-foreground">
+            <Clock />
+            <span class="text-xs font-medium">Time</span>
+          </div>
+          <p class="text-lg font-bold text-foreground artist-minutes"/>
+            
+          </p>
+        </div>
 
-        <p class="artist-plays text-sm sm:text-base text-base-content/70"></p>
+        
+        <div class="bg-card border border-border rounded-lg p-3 space-y-1">
+          <div class="flex items-center gap-1.5 text-muted-foreground">
+            <Play />
+            <span class="text-xs font-medium">Plays</span>
+          </div>
+          <p class="text-lg font-bold text-foreground artist-plays"></p>
+        </div>
+      </div>
+
+      
+      <div class="space-y-1.5 pt-2 border-t border-border">
+        <div class="flex items-center justify-between text-xs">
+          <div class="flex items-center gap-1.5 text-muted-foreground">
+            <Calendar />
+            <span>First time</span>
+          </div>
+          <span class="font-medium text-foreground artist-firstplay"></span>
+        </div>
+        <div class="flex items-center justify-between text-xs">
+          <div class="flex items-center gap-1.5 text-muted-foreground">
+            <Calendar />
+            <span>Last time</span>
+          </div>
+          <span class="font-medium text-foreground artist-lastplay"></span>
+        </div>
       </div>
     </div>
   </div>
