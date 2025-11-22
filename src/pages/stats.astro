@@ -369,6 +369,7 @@ import { saveJson } from "../utils/indexeddb";
           artistImage: "",
           firstPlay: new Date(item.firstPlay).toISOString(), // convertir de vuelta a ISO
           lastPlay: new Date(item.lastPlay).toISOString(),
+          idArtist: "",
         }));
 
       await Promise.all(result);
@@ -411,6 +412,8 @@ import { saveJson } from "../utils/indexeddb";
           }
 
           const artista = artistaUri.replace("spotify:artist:", "");
+          item.idArtist = artista;
+          console.log("Artist ID:", artista);
 
           // Esperar 500 ms antes de la siguiente petición
           await delay(100);

@@ -51,7 +51,7 @@ export function getTop100Artists(data: SpotifyExtendedStreamingHistory[]) {
   const result: ResultTopp100Artist[] = [...artistsMap.values()]
     .sort((a, b) => b.totalMs - a.totalMs)
     .slice(0, 100)
-    .map((item) => ({
+    .map(item => ({
       artist: item.artist,
       minutes: Math.floor(item.totalMs / 60000),
       plays: item.plays,

@@ -28,9 +28,7 @@ export const POST: APIRoute = async ({ request }) => {
   const player = await playerRes.json();
   const isPlaying = player?.is_playing;
 
-  const endpoint = isPlaying
-    ? "https://api.spotify.com/v1/me/player/pause"
-    : "https://api.spotify.com/v1/me/player/play";
+  const endpoint = isPlaying ? "https://api.spotify.com/v1/me/player/pause" : "https://api.spotify.com/v1/me/player/play";
 
   // Enviar comando PLAY o PAUSE
   await fetch(endpoint, {

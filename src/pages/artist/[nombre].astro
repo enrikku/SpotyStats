@@ -1,21 +1,31 @@
 ---
 import MainLayout from "../../layouts/MainLayout.astro";
+import TopSongCard from "../../components/TopSongCard.astro";
 
 const { nombre } = Astro.params;
 ---
 
 <MainLayout content={{ title: `Top Artists - ${nombre}` }}>
   <section class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Top Artists</h1>
-    <div id="topArtistsContainer" class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-      <!-- Top artists will be dynamically inserted here -->
-      <canvas id="minutesPerYearChart"></canvas>
+    <h1 class="text-3xl font-bold mb-6">Top 20 Tracks</h1>
+
+    <div id="top20Tracks" class="grid sm:grid-cols-4"></div>
+    <TopSongCard />
+
+    <div id="chartYearsMinutes" class="flex flex-col items-center mt-8 h-[350px]">
+      <h1 class="w-full text-center">Minutes Per Year</h1>
+      <canvas id="minutesPerYearChart" class="w-full"></canvas>
+    </div>
+
+    <div id="chartPlaysPerDay" class="flex flex-col items-center mt-8 h-[350px]">
+      <h1 class="w-full text-center">Plays Per Day of the Week</h1>
+      <canvas id="playsPerDayChart" class="w-full"></canvas>
     </div>
   </section>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    import { loadJson } from "../../utils/indexeddb";
+    import { loadJson, saveJson } from "../../utils/indexeddb";
     import type { SpotifyExtendedStreamingHistory } from "../../interfaces/SpotifyExtendedStreamingHistory.ts";
 
     import {
@@ -26,41 +36,100 @@ const { nombre } = Astro.params;
       getMinutesPerYear,
     } from "../../utils/sorter.ts";
 
-    import { renderMinutesPerYearChart } from "../../utils/charts.ts";
-    
+    import { renderMinutesPerYearChart, renderPlaysPerDayChart } from "../../utils/charts.ts";
+    import type { ResultTopp100Artist } from "../../interfaces/ResultTopp100Artist";
+
+    const chartYearsMinutes = document.getElementById("chartYearsMinutes") as HTMLElement;
+    const chartPlaysPerDay = document.getElementById("chartPlaysPerDay") as HTMLElement;
+    const minutesPerYearChart = document.getElementById("minutesPerYearChart") as HTMLCanvasElement;
+    const playsPerDayChart = document.getElementById("playsPerDayChart") as HTMLCanvasElement;
+
     var artistName = decodeURIComponent(document.URL.split("/").pop() || "");
 
     const history = await loadJson("extendedHistory");
-    console.log(history);
+    const top100ArtistsCache = await localStorage.getItem("top100ArtistsCache");
 
-    if (history) {
-      const artistData = history.filter(
+    if (history && top100ArtistsCache) {
+      const artistData: SpotifyExtendedStreamingHistory[] = history.filter(
         (record: SpotifyExtendedStreamingHistory) => record.master_metadata_album_artist_name === artistName
       );
-      console.log(artistData);
-      const minutesPerDay = getMinutesPerDay(artistData);
-      console.log("Minutes per day:");
-      console.log(minutesPerDay);
 
-      const playsPerDay = getPlaysPerDay(artistData);
-      console.log("Plays per day:");
-      console.log(playsPerDay);
+      // Get all songs by this artist
+      const top100Artists = JSON.parse(top100ArtistsCache) as ResultTopp100Artist[];
+      const artistInfo = top100Artists.find((artist) => artist.artist === artistName);
+      const idArtist = artistInfo?.idArtist || null;
 
-      const totalMinutes = getTotalMinutes(artistData);
-      console.log("Total minutes:");
-      console.log(totalMinutes);
+      // console.log("Artist Data:");
+      // console.log(artistData);
 
-      const topTracks = getTopTracks(artistData);
-      console.log("Top tracks:");
-      console.log(topTracks);
+      // Get all songs by this artist
+      // Call api to get artist's top tracks if idArtist is available
+      // const artistAlbums = await fetch(`/api/spotify/artist/album?artistId=${idArtist}`);
+      // const artistAlbumsData = await artistAlbums.json();
+      // console.log("Artist albums data:", artistAlbumsData);
 
-      const minutesPerYear = getMinutesPerYear(artistData);
-      console.log("Minutes per year:");
-      console.log(minutesPerYear);
+      // console.log(artistData);
+      // const minutesPerDay = getMinutesPerDay(artistData);
+      // console.log("Minutes per day:");
+      // console.log(minutesPerDay);
 
-      await renderMinutesPerYearChart(artistData, document.getElementById("topArtistsContainer")!);
+      // const totalMinutes = getTotalMinutes(artistData);
+      // console.log("Total minutes:");
+      // console.log(totalMinutes);
+
+      await renderTop20Tracks(artistData);
+      await renderMinutesPerYearChart(artistData, chartYearsMinutes);
+      await renderPlaysPerDayChart(artistData, chartPlaysPerDay);
     } else {
       console.log("No extended history data found.");
+    }
+
+    async function renderTop20Tracks(artistData: SpotifyExtendedStreamingHistory[]) {
+      const topTracks = getTopTracks(artistData);
+
+      const tracksIds = topTracks.map((track) => track.idTrack).join(",");
+
+      const artistTracksDataSaved = await loadJson("artistTracksData" + artistName);
+      var artistTracksData: any = null;
+
+      if (artistTracksDataSaved) {
+        console.log("Using cached artist tracks data");
+        artistTracksData = artistTracksDataSaved;
+      } else {
+        const artistTracksResponse = await fetch(`/api/spotify/tracks/severalstracks?tracksIds=${tracksIds}`);
+        var artistTracksData = await artistTracksResponse.json();
+        await saveJson("artistTracksData" + artistName, artistTracksData);
+      }
+
+      const top20TracksContainer = document.getElementById("top20Tracks");
+      const template = document.querySelector(".template-top-song-card") as HTMLTemplateElement;
+
+      topTracks.slice(0, 20).forEach((track, index) => {
+        if (!template || !top20TracksContainer) return;
+
+        const clone = template.content.cloneNode(true) as DocumentFragment;
+        const trackImage = clone.querySelector(".track-image") as HTMLImageElement;
+        const trackName = clone.querySelector(".track-name") as HTMLElement;
+        const artistName = clone.querySelector(".artist-name") as HTMLElement;
+        const trackCount = clone.querySelector(".track-count") as HTMLElement;
+        const trackDuration = clone.querySelector(".track-duration") as HTMLElement;
+        const topTrack = clone.querySelector(".top-track") as HTMLElement;
+        const trackData = artistTracksData.tracks.find((t: { id: string }) => t.id === track.idTrack);
+        const durationHours = Math.floor(track.minutes / 60);
+        const durationMinutes = Math.floor(track.minutes % 60);
+
+        trackImage.src = trackData ? trackData.album.images[0].url : "/placeholder.svg";
+        trackImage.alt = `${track.name} album cover`;
+        trackName.textContent = track.track;
+        artistName.textContent = track.master_metadata_album_artist_name;
+        artistName.title = track.master_metadata_album_artist_name;
+
+        trackCount.textContent = track.plays.toString();
+        trackDuration.textContent = `${durationHours}h ${durationMinutes}m`;
+        topTrack.textContent = "#" + (index + 1).toString();
+
+        top20TracksContainer.appendChild(clone);
+      });
     }
   </script>
 </MainLayout>

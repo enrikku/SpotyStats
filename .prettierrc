@@ -1,4 +1,5 @@
 {
-  "printWidth": 120,
-  "singleAttributePerLine": false
+  "printWidth": 300,
+  "singleAttributePerLine": false,
+  "arrowParens": "avoid"
 }

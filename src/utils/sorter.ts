@@ -43,6 +43,7 @@ export function getTopTracks(artistData: SpotifyExtendedStreamingHistory[]) {
     const item = map.get(track);
     item.minutes += ms / 60000;
     item.plays++;
+    item.idTrack = r.spotify_track_uri.replace("spotify:track:", "") || "";
   }
 
   return [...map.values()].sort((a, b) => b.minutes - a.minutes).slice(0, 20);
@@ -58,5 +59,7 @@ export function getMinutesPerYear(artistData: SpotifyExtendedStreamingHistory[])
     map.set(year, (map.get(year) || 0) + minutes);
   }
 
-  return [...map.entries()].map(([year, minutes]) => ({ year, minutes })).sort((a, b) => a.year - b.year);
+  const filteredEntries = [...map.entries()].filter(([year, minutes]) => minutes >= 1);
+
+  return filteredEntries.map(([year, minutes]) => ({ year, minutes })).sort((a, b) => a.year - b.year);
 }
