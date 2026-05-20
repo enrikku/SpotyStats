@@ -5,6 +5,7 @@ export async function getValidSpotifyToken(request: Request) {
   const accessToken = cookie.match(/accessToken=([^;]+)/)?.[1];
   const refreshToken = cookie.match(/refreshToken=([^;]+)/)?.[1];
   const expiresAt = Number(cookie.match(/expiresAt=([^;]+)/)?.[1]);
+  const userId = decodeURIComponent(cookie.match(/spotifyUserId=([^;]+)/)?.[1] ?? "");
 
   if (!accessToken || !refreshToken || !expiresAt) {
     return { error: "NO_AUTH" };
@@ -12,7 +13,7 @@ export async function getValidSpotifyToken(request: Request) {
 
   // NO EXPIRADO → devolver token directamente
   if (Date.now() < expiresAt) {
-    return { accessToken, setCookies: [] };
+    return { accessToken, userId, setCookies: [] };
   }
 
   // EXPIRO → refrescar token
@@ -40,5 +41,5 @@ export async function getValidSpotifyToken(request: Request) {
 
   const setCookies = [`accessToken=${newAccessToken}; ${baseFlags}`, `expiresAt=${newExpiresAt}; ${baseFlags}`];
 
-  return { accessToken: newAccessToken, setCookies };
+  return { accessToken: newAccessToken, userId, setCookies };
 }

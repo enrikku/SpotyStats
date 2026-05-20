@@ -1,59 +1,31 @@
-// src/pages/api/spotify/player/now-playing.ts
-import type { APIRoute } from "astro";
-import { getValidSpotifyToken } from "../../../../utils/spotifyAuth";
-
 export const runtime = "node";
 
+import type { APIRoute } from "astro";
+import { requireSpotifyAuth, jsonResponse } from "../../../../utils/spotifyApi";
+
 export const GET: APIRoute = async ({ request }) => {
-  const { accessToken, setCookies, error } = await getValidSpotifyToken(request);
+  const auth = await requireSpotifyAuth(request);
+  if (auth instanceof Response) return auth;
 
-  if (error) return new Response("NO_AUTH", { status: 401 });
-
-  const resSpotify = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
-    headers: { Authorization: `Bearer ${accessToken}` },
+  const spotifyRes = await fetch("https://api.spotify.com/v1/me/player/currently-playing", {
+    headers: { Authorization: `Bearer ${auth.accessToken}` },
   });
 
-  // ---- ⚠️ SI NO HAY NADA SONANDO → 204 ----
-  if (resSpotify.status === 204) {
-    return new Response(JSON.stringify({ playing: false }), {
-      headers: { "Content-Type": "application/json" },
-    });
+  if (spotifyRes.status === 204) {
+    return jsonResponse({ playing: false }, auth.setCookies);
   }
 
-  // ---- ⚠️ Si no hay body ----
-  const text = await resSpotify.text();
-  if (!text) {
-    return new Response(JSON.stringify({ playing: false }), {
-      headers: { "Content-Type": "application/json" },
-    });
-  }
+  const text = await spotifyRes.text();
+  if (!text) return jsonResponse({ playing: false }, auth.setCookies);
 
-  // ---- Parsear seguro ----
   let data: any;
   try {
     data = JSON.parse(text);
   } catch {
-    data = null;
+    return jsonResponse({ playing: false }, auth.setCookies);
   }
 
-  // ---- Si Spotify devuelve error interno ----
-  if (!data || data.error) {
-    return new Response(JSON.stringify({ playing: false }), {
-      headers: { "Content-Type": "application/json" },
-    });
-  }
+  if (!data || data.error) return jsonResponse({ playing: false }, auth.setCookies);
 
-  // ---- Respuesta final ----
-  const response = new Response(JSON.stringify(data), {
-    headers: { "Content-Type": "application/json" },
-  });
-
-  // ---- Refrescar cookies si toca ----
-  if (setCookies) {
-    for (const c of setCookies) {
-      response.headers.append("Set-Cookie", c);
-    }
-  }
-
-  return response;
+  return jsonResponse(data, auth.setCookies);
 };
